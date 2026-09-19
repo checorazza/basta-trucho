@@ -183,10 +183,13 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
   max-width:18ch; text-wrap:balance; line-height:1.15;
 }
 .wheel{
-  --wheel:min(88vw, 52vh, 430px);
-  /* 21 fichas tangentes en un anillo: d = 2·R·sen(180°/21) con R + d/2 = radio */
-  --btn:calc(var(--wheel) * .1245);
-  --rf:.4352;
+  /* El anillo crece con la pantalla y siempre deja 17px de margen al borde. */
+  --wheel:min(100vw - 34px, 62vh, 620px);
+  /* 21 fichas separadas: con d = .105·W el hueco entre vecinas es
+     .149042·W − 1.149042·d = .0284·W, o sea un 27% del diámetro de la ficha.
+     El hueco es zona muerta: un toque ahí no elige nada en vez de elegir mal. */
+  --btn:calc(var(--wheel) * .105);
+  --rf:.4475;
   position:relative; width:var(--wheel); height:var(--wheel); flex:none;
   animation:wheelIn .5s var(--ease-pop) both;
 }
@@ -211,7 +214,7 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
   position:absolute; left:50%; top:50%;
   width:var(--btn); height:var(--btn); border-radius:50%;
   display:grid; place-items:center;
-  font-family:'Chango',Impact,sans-serif; font-size:calc(var(--btn) * .52);
+  font-family:'Chango',Impact,sans-serif; font-size:calc(var(--btn) * .56);
   color:var(--felt-900); background:var(--carton);
   box-shadow:0 3px 0 rgba(2,18,17,.5);
   /* la escala va al final: crece sobre su propio centro, no se aleja del eje */
@@ -353,7 +356,13 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
   .scene--round{flex-direction:row;gap:clamp(30px,5vw,70px);}
   .dial{--dial:min(38vw, 66vh, 420px);}
   .basta{width:min(42vw,480px);height:min(46vh,300px);font-size:clamp(3.5rem,7vw,6.5rem);}
-  .wheel{--wheel:min(58vh, 70vw, 470px);}
+}
+/* Celular acostado: el ancho sobra y la altura no, así que la rueda se pone
+   entre el título y el botón de salir en vez de apilarse y hacer scroll. */
+@media (orientation:landscape) and (max-height:560px){
+  .scene--wheel{flex-direction:row;gap:clamp(10px,3vw,34px);}
+  .wheel{--wheel:min(86vh, 52vw, 620px);}
+  .kicker{max-width:9ch;font-size:clamp(1.05rem,3.6vh,1.5rem);}
 }
 @media (min-width:900px){
   .tagline{font-size:1.2rem;}
