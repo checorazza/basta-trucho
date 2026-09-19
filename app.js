@@ -8,9 +8,9 @@
 
   /* ── Letras ──────────────────────────────────────────────────
      Un solo anillo, en orden alfabético y pegadas entre sí.
-     Sin K, Ñ, W, X ni Y: en una mesa no dan juego. */
-  const ALL = ['A','B','C','D','E','F','G','H','I','J','L','M',
-               'N','O','P','Q','R','S','T','U','V','Z'];
+     Sin K, Ñ, W, X, Y ni Z: en una mesa no dan juego. */
+  const ALL = ['A','B','C','D','E','F','G','H','I','J','L',
+               'M','N','O','P','Q','R','S','T','U','V'];
 
   const DURATIONS = [10, 15];
   const RING_LENGTH = 2 * Math.PI * 92;   // r=92 en el viewBox del reloj

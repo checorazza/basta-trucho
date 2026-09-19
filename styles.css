@@ -184,9 +184,9 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
 }
 .wheel{
   --wheel:min(88vw, 52vh, 430px);
-  /* 22 fichas tangentes en un anillo: d = 2·R·sen(180°/22) con R + d/2 = radio */
-  --btn:calc(var(--wheel) * .120);
-  --rf:.44;
+  /* 21 fichas tangentes en un anillo: d = 2·R·sen(180°/21) con R + d/2 = radio */
+  --btn:calc(var(--wheel) * .1245);
+  --rf:.4352;
   position:relative; width:var(--wheel); height:var(--wheel); flex:none;
   animation:wheelIn .5s var(--ease-pop) both;
 }
