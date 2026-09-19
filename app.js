@@ -7,10 +7,10 @@
   'use strict';
 
   /* ── Letras ──────────────────────────────────────────────────
+     Un solo anillo, en orden alfabético y pegadas entre sí.
      Sin K, Ñ, W, X ni Y: en una mesa no dan juego. */
-  const RING_OUT = ['A','B','C','D','E','F','G','H','I','J','L','M','N','O'];
-  const RING_IN  = ['P','Q','R','S','T','U','V','Z'];
-  const ALL = [...RING_OUT, ...RING_IN];
+  const ALL = ['A','B','C','D','E','F','G','H','I','J','L','M',
+               'N','O','P','Q','R','S','T','U','V','Z'];
 
   const DURATIONS = [10, 15];
   const RING_LENGTH = 2 * Math.PI * 92;   // r=92 en el viewBox del reloj
@@ -163,20 +163,18 @@
   const tiles = new Map();
   function buildWheel() {
     const frag = document.createDocumentFragment();
-    const place = (list, rf, offset) => list.forEach((L, i) => {
+    const step = 360 / ALL.length;
+    ALL.forEach((L, i) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'letter';
       b.textContent = L;
       b.dataset.letter = L;
       b.setAttribute('aria-label', 'Letra ' + L);
-      b.style.setProperty('--a', (offset + i * (360 / list.length)).toFixed(2));
-      b.style.setProperty('--rf', rf);
+      b.style.setProperty('--a', (i * step).toFixed(3));
       frag.appendChild(b);
       tiles.set(L, b);
     });
-    place(RING_OUT, 0.429, 0);
-    place(RING_IN, 0.272, 360 / (RING_IN.length * 2));
     el.wheelLetters.appendChild(frag);
   }
   function paintWheel() {
@@ -222,10 +220,13 @@
     if (reduced()) { tiles.get(target).classList.add('is-picked'); sfx.elegir();
       later(() => beginRound(target), 300); return; }
 
-    const steps = 16;
-    let delay = 30, acc = 0, prev = null;
+    // La ruleta recorre el anillo frenando y aterriza justo en la letra sorteada.
+    const steps = 20;
+    const target_i = ALL.indexOf(target);
+    const from = ((target_i - (steps - 1)) % ALL.length + ALL.length) % ALL.length;
+    let delay = 24, acc = 0, prev = null;
     for (let i = 0; i < steps; i++) {
-      const node = tiles.get(RING_OUT[i % RING_OUT.length]);
+      const node = tiles.get(ALL[(from + i) % ALL.length]);
       const last = prev;
       later(() => {
         if (last) last.classList.remove('is-flash');
@@ -234,7 +235,7 @@
       }, acc);
       prev = node;
       acc += delay;
-      delay *= 1.12;
+      delay *= 1.10;
     }
     later(() => {
       if (prev) prev.classList.remove('is-flash');
