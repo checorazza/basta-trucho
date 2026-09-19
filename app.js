@@ -18,7 +18,7 @@
 
   const $ = (id) => document.getElementById(id);
   const el = {
-    app: $('app'), wipe: $('wipe'),
+    app: $('app'), wipe: $('wipe'), wipeWord: $('wipe-word'),
     scenes: {
       inicio: $('scene-inicio'),
       preparando: $('scene-preparando'),
@@ -34,7 +34,6 @@
     dial: $('dial'), progress: $('dial-progress'),
     roundLetter: $('round-letter'), seconds: $('round-seconds'),
     basta: $('btn-basta'),
-    finScene: $('scene-fin'), endTitle: $('end-title'), endSub: $('end-sub'),
     endLetterLine: $('end-letter-line'), endLetter: $('end-letter'),
     endNoLetter: $('end-noletter'),
     nueva: $('btn-nueva'), inicio: $('btn-inicio')
@@ -153,14 +152,19 @@
       n.style.animation = 'none'; void n.offsetWidth; n.style.animation = '';
     });
   }
-  function wipeTo(fn, color) {
+  /* Con `word`, la cortina se queda un momento y canta la palabra:
+     así BASTA se ve claro sin una pantalla intermedia que frene el juego. */
+  function wipeTo(fn, color, word) {
     if (reduced()) { fn(); return; }
+    const hold = !!word;
+    el.wipeWord.textContent = word || '';
     el.wipe.style.setProperty('--wipe-color', color);
-    el.wipe.classList.remove('is-active');
+    el.wipe.classList.remove('is-active', 'wipe--hold');
     void el.wipe.offsetWidth;
+    if (hold) el.wipe.classList.add('wipe--hold');
     el.wipe.classList.add('is-active');
-    later(fn, 280);
-    later(() => el.wipe.classList.remove('is-active'), 700);
+    later(fn, hold ? 430 : 280);
+    later(() => el.wipe.classList.remove('is-active', 'wipe--hold'), hold ? 1180 : 700);
   }
 
   /* ── La rueda ────────────────────────────────────────────────── */
@@ -229,7 +233,7 @@
     // rAF dibuja la cuenta; el setTimeout garantiza el corte aunque el
     // navegador congele los frames con la pestaña en segundo plano.
     state.endTimer = setTimeout(() => {
-      if (state.phase === 'preparando' || state.phase === 'activa') endRound('tiempo');
+      if (state.phase === 'preparando' || state.phase === 'activa') endRound();
     }, state.duration * 1000 + 40);
     state.raf = requestAnimationFrame(tickClock);
   }
@@ -322,7 +326,7 @@
     if (!enRueda && state.phase !== 'activa') return;
 
     const left = state.endsAt - now;
-    if (left <= 0) { endRound('tiempo'); return; }
+    if (left <= 0) { endRound(); return; }
 
     // Mismo reloj, dos caras: el anillo de la rueda o el del disco.
     const secEl  = enRueda ? el.wheelSeconds  : el.seconds;
@@ -341,35 +345,42 @@
     state.raf = requestAnimationFrame(tickClock);
   }
 
+  function stopClock() {
+    cancelAnimationFrame(state.raf);
+    state.raf = 0;
+    clearTimeout(state.endTimer);
+    state.endTimer = 0;
+  }
+
+  /* BASTA corta la ronda y vuelve derecho a la rueda: no hay pantalla de fin,
+     que es sólo para cuando se agota el reloj. */
   function hitBasta() {
     if (state.phase !== 'activa') return;          // un solo BASTA por ronda
     el.basta.disabled = true;
     el.basta.classList.add('is-slammed');
-    endRound('basta');
+    state.phase = 'cortada';                       // el reloj deja de correr acá
+    stopClock();
+    clearTimers();
+    el.dial.classList.remove('is-urgent');
+    sfx.basta();
+    buzz([40, 30, 90]);
+    wipeTo(toWheel, 'var(--coral)', '¡BASTA!');
   }
 
-  function endRound(kind) {
-    cancelAnimationFrame(state.raf);
-    state.raf = 0;
-    clearTimeout(state.endTimer);
-    state.phase = 'fin';                            // corta el reloj al instante
+  /* Única salida a la pantalla de fin: se acabó el tiempo. */
+  function endRound() {
+    state.phase = 'fin';
+    stopClock();
     clearTimers();
     releaseAwake();
     el.dial.classList.remove('is-urgent');
     el.wheel.classList.remove('is-urgent');
 
-    if (kind === 'basta') { sfx.basta(); buzz([40, 30, 90]); }
-    else {
-      sfx.tiempo(); buzz([120, 80, 120]);
-      el.seconds.textContent = '0';
-      el.wheelSeconds.textContent = '0';
-    }
+    sfx.tiempo();
+    buzz([120, 80, 120]);
+    el.seconds.textContent = '0';
+    el.wheelSeconds.textContent = '0';
 
-    el.finScene.dataset.variant = kind;
-    el.endTitle.textContent = kind === 'basta' ? '¡BASTA!' : '¡TIEMPO!';
-    el.endSub.textContent = kind === 'basta'
-      ? 'Se terminó el tiempo.'
-      : 'Se acabaron los segundos.';
     // Se puede acabar el tiempo sin que nadie haya elegido letra.
     el.endLetterLine.hidden = !state.letter;
     el.endNoLetter.hidden = !!state.letter;
@@ -380,14 +391,14 @@
 
     wipeTo(() => {
       show('fin');
-      // Arma NUEVA RONDA recién después del golpe, para que nadie la toque de rebote.
+      // Arma NUEVA RONDA con un instante de demora, para que nadie la toque de rebote.
       void el.nueva.offsetWidth;
       el.nueva.classList.add('is-arming');
       later(() => {
         el.nueva.disabled = false;
         el.nueva.classList.remove('is-arming');
       }, 800);
-    }, kind === 'basta' ? 'var(--coral)' : 'var(--mango)');
+    }, 'var(--mango)');
   }
 
   /* ── Salidas ─────────────────────────────────────────────────── */

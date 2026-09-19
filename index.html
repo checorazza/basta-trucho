@@ -15,7 +15,7 @@
 
 <body>
   <div class="grain" aria-hidden="true"></div>
-  <div class="wipe" id="wipe" aria-hidden="true"></div>
+  <div class="wipe" id="wipe" aria-hidden="true"><span class="wipe__word" id="wipe-word"></span></div>
 
   <main class="app" id="app">
 
@@ -81,12 +81,12 @@
       </button>
     </section>
 
-    <!-- ══ 4 y 5. ¡BASTA! / ¡TIEMPO! ══ -->
-    <section class="scene scene--end" id="scene-fin" data-scene="fin" data-variant="basta" hidden>
+    <!-- ══ 4. ¡TIEMPO! — sólo cuando se agota el reloj ══ -->
+    <section class="scene scene--end" id="scene-fin" data-scene="fin" hidden>
       <div class="burst" aria-hidden="true"></div>
       <div class="end">
-        <h2 class="end__title" id="end-title" aria-live="assertive">¡BASTA!</h2>
-        <p class="end__sub" id="end-sub">Se terminó el tiempo.</p>
+        <h2 class="end__title" aria-live="assertive">¡TIEMPO!</h2>
+        <p class="end__sub">Se acabaron los segundos.</p>
         <p class="end__letter" id="end-letter-line">Jugaron con la <strong id="end-letter">A</strong></p>
         <p class="end__letter end__letter--none" id="end-noletter" hidden>Nadie llegó a elegir letra</p>
         <p class="end__hint">Comparen las respuestas en voz alta.</p>
