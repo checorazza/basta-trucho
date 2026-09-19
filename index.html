@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#073A38">
+  <title>Basta de Mesa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Chango&family=Archivo:wght@500;700;900&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="wipe" id="wipe" aria-hidden="true"></div>
+
+  <main class="app" id="app">
+
+    <!-- ══ 1. INICIO ══ -->
+    <section class="scene scene--home" id="scene-inicio" data-scene="inicio">
+      <h1 class="logo" id="logo">
+        <span class="logo__l" style="--d:0">B</span><span class="logo__l" style="--d:1">A</span><span class="logo__l"
+          style="--d:2">S</span><span class="logo__l" style="--d:3">T</span><span class="logo__l" style="--d:4">A</span>
+      </h1>
+      <p class="tagline">Tocá una letra, respondé y ganá.</p>
+
+      <button class="btn btn--start" id="btn-empezar" type="button">EMPEZAR</button>
+
+      <div class="settings">
+        <div class="setting">
+          <span class="setting__label" id="lbl-duracion">Duración de la ronda</span>
+          <div class="chips" role="group" aria-labelledby="lbl-duracion" id="chips-duracion">
+            <button class="chip" type="button" id="dur-10" data-dur="10">10<small>s</small></button>
+            <button class="chip" type="button" id="dur-15" data-dur="15">15<small>s</small></button>
+          </div>
+        </div>
+        <div class="setting setting--row">
+          <span class="setting__label" id="lbl-sonido">Sonido</span>
+          <button class="toggle" type="button" id="btn-sonido" aria-labelledby="lbl-sonido" aria-pressed="true">
+            <span class="toggle__knob" aria-hidden="true"></span>
+            <span class="toggle__text" id="sonido-estado">SÍ</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 2. PREPARANDO RONDA ══ -->
+    <section class="scene scene--wheel" id="scene-preparando" data-scene="preparando" hidden>
+      <p class="kicker" id="kicker-wheel">Elegí una letra</p>
+      <div class="wheel" id="wheel">
+        <div class="wheel__disc" aria-hidden="true"></div>
+        <div class="wheel__letters" id="wheel-letters" role="group" aria-label="Letras disponibles"></div>
+        <button class="spin" type="button" id="btn-azar">
+          <span class="spin__small">AL</span>
+          <span class="spin__big">AZAR</span>
+        </button>
+      </div>
+      <button class="link-btn" type="button" id="btn-salir">Salir de la partida</button>
+    </section>
+
+    <!-- ══ 3. RONDA ACTIVA ══ -->
+    <section class="scene scene--round" id="scene-activa" data-scene="activa" hidden>
+      <div class="dial" id="dial">
+        <svg class="dial__ring" viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="dial__track" cx="100" cy="100" r="92"></circle>
+          <circle class="dial__progress" id="dial-progress" cx="100" cy="100" r="92"></circle>
+        </svg>
+        <div class="dial__letter" id="round-letter">A</div>
+        <div class="dial__time" role="timer" aria-live="off"><span id="round-seconds">15</span><small>s</small></div>
+      </div>
+      <button class="basta" type="button" id="btn-basta">
+        <span class="basta__face">BASTA</span>
+      </button>
+    </section>
+
+    <!-- ══ 4 y 5. ¡BASTA! / ¡TIEMPO! ══ -->
+    <section class="scene scene--end" id="scene-fin" data-scene="fin" data-variant="basta" hidden>
+      <div class="burst" aria-hidden="true"></div>
+      <div class="end">
+        <h2 class="end__title" id="end-title" aria-live="assertive">¡BASTA!</h2>
+        <p class="end__sub" id="end-sub">Se terminó el tiempo.</p>
+        <p class="end__letter">Jugaron con la <strong id="end-letter">A</strong></p>
+        <p class="end__hint">Comparen las respuestas en voz alta.</p>
+      </div>
+      <button class="btn btn--again" type="button" id="btn-nueva" disabled>NUEVA RONDA</button>
+      <button class="link-btn" type="button" id="btn-inicio">Terminar partida</button>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
