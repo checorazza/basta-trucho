@@ -207,6 +207,24 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
   content:""; position:absolute; inset:calc(var(--wheel) * .135); border-radius:50%;
   border:1px dashed var(--line);
 }
+/* Reloj de la rueda: anillo entre el botón central y las letras. */
+.wheel__clock{
+  position:absolute; left:50%; top:50%;
+  width:calc(var(--wheel) * .728); height:calc(var(--wheel) * .728);
+  transform:translate(-50%,-50%) rotate(-90deg);
+  pointer-events:none;   /* tapa el botón AL AZAR: no debe robarle el toque */
+}
+.wheel__clock-track{fill:none;stroke:var(--line);stroke-width:10;}
+.wheel__clock-fill{
+  fill:none; stroke:var(--menta); stroke-width:10; stroke-linecap:round;
+  stroke-dasharray:578.05; stroke-dashoffset:0;
+  transition:stroke .3s;
+}
+.wheel.is-urgent .wheel__clock-fill{stroke:var(--coral);}
+.wheel.is-urgent .spin__time{color:var(--coral);}
+.wheel.is-urgent .spin__big{animation:beatFlat .95s ease-in-out infinite;}
+@keyframes beatFlat{0%,100%{transform:scale(1)}35%{transform:scale(1.08)}}
+
 .wheel__letters{position:absolute;inset:0;}
 
 .letter{
@@ -243,6 +261,12 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
 }
 .spin__small{font-size:calc(var(--wheel) * .042);font-weight:900;letter-spacing:.2em;opacity:.85;}
 .spin__big{font-family:'Chango',Impact,sans-serif;font-size:calc(var(--wheel) * .115);line-height:1;}
+.spin__time{
+  margin-top:calc(var(--wheel) * .016);
+  font-weight:900; font-size:calc(var(--wheel) * .058); line-height:1;
+  font-variant-numeric:tabular-nums; color:var(--menta);
+}
+.spin__time small{font-size:.6em;opacity:.75;}
 .spin:active:not(:disabled){transform:translate(-50%,calc(-50% + 5px));box-shadow:0 2px 0 var(--coral-deep);}
 .spin:disabled{cursor:default;}
 

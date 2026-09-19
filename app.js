@@ -28,13 +28,16 @@
     empezar: $('btn-empezar'),
     chips: [...document.querySelectorAll('#chips-duracion .chip')],
     sonido: $('btn-sonido'), sonidoEstado: $('sonido-estado'),
-    wheelLetters: $('wheel-letters'), azar: $('btn-azar'),
+    wheel: $('wheel'), wheelLetters: $('wheel-letters'), azar: $('btn-azar'),
+    wheelProgress: $('wheel-progress'), wheelSeconds: $('wheel-seconds'),
     kickerWheel: $('kicker-wheel'), salir: $('btn-salir'),
     dial: $('dial'), progress: $('dial-progress'),
     roundLetter: $('round-letter'), seconds: $('round-seconds'),
     basta: $('btn-basta'),
     finScene: $('scene-fin'), endTitle: $('end-title'), endSub: $('end-sub'),
-    endLetter: $('end-letter'), nueva: $('btn-nueva'), inicio: $('btn-inicio')
+    endLetterLine: $('end-letter-line'), endLetter: $('end-letter'),
+    endNoLetter: $('end-noletter'),
+    nueva: $('btn-nueva'), inicio: $('btn-inicio')
   };
 
   const state = {
@@ -45,6 +48,7 @@
     used: new Set(),
     endsAt: 0,
     raf: 0,
+    endTimer: 0,      // respaldo del corte, vive a través del cambio de escena
     lastBeep: 0,
     timers: []
   };
@@ -194,12 +198,47 @@
   }
 
   /* ── Preparar ronda ──────────────────────────────────────────── */
+  /* El reloj arranca acá, con la rueda: elegir la letra ya cuesta tiempo.
+     No se reinicia al elegir; la ronda sigue con lo que quedó. */
   function toWheel() {
     clearTimers();
+    clearTimeout(state.endTimer);
+    cancelAnimationFrame(state.raf);
     if (state.used.size >= ALL.length) state.used.clear();
+    state.letter = null;
     paintWheel();
     lockWheel(false);
+
+    el.wheel.classList.remove('is-urgent');
+    el.dial.classList.remove('is-urgent');
+    el.wheelSeconds.textContent = String(state.duration);
+    el.wheelProgress.style.strokeDasharray = RING_LENGTH.toFixed(2);
+    el.wheelProgress.style.strokeDashoffset = '0';
+    el.progress.style.strokeDasharray = RING_LENGTH.toFixed(2);
+    el.progress.style.strokeDashoffset = '0';
+
     show('preparando');
+    startClock();
+    sfx.arrancar();
+    keepAwake();
+  }
+
+  function startClock() {
+    state.endsAt = performance.now() + state.duration * 1000;
+    state.lastBeep = state.duration + 1;
+    // rAF dibuja la cuenta; el setTimeout garantiza el corte aunque el
+    // navegador congele los frames con la pestaña en segundo plano.
+    state.endTimer = setTimeout(() => {
+      if (state.phase === 'preparando' || state.phase === 'activa') endRound('tiempo');
+    }, state.duration * 1000 + 40);
+    state.raf = requestAnimationFrame(tickClock);
+  }
+
+  // La letra queda registrada en el toque, no al arrancar la ronda: si el
+  // reloj vence durante la confirmación, el final igual muestra la elegida.
+  function commitLetter(L) {
+    state.letter = L;
+    state.used.add(L);
   }
 
   function pickLetter(L) {
@@ -207,6 +246,7 @@
     lockWheel(true);
     const tile = tiles.get(L);
     tile.classList.add('is-picked');
+    commitLetter(L);
     sfx.elegir();
     buzz(20);
     later(() => beginRound(L), reduced() ? 60 : 520);
@@ -217,14 +257,15 @@
     lockWheel(true);
     const pool = ALL.filter(L => !state.used.has(L));
     const target = pool[Math.floor(Math.random() * pool.length)];
-    if (reduced()) { tiles.get(target).classList.add('is-picked'); sfx.elegir();
-      later(() => beginRound(target), 300); return; }
+    if (reduced()) { tiles.get(target).classList.add('is-picked'); commitLetter(target);
+      sfx.elegir(); later(() => beginRound(target), 300); return; }
 
     // La ruleta recorre el anillo frenando y aterriza justo en la letra sorteada.
-    const steps = 20;
+    // Corta ahora que el reloj ya corre: no puede costar 2 segundos de ronda.
+    const steps = 14;
     const target_i = ALL.indexOf(target);
     const from = ((target_i - (steps - 1)) % ALL.length + ALL.length) % ALL.length;
-    let delay = 24, acc = 0, prev = null;
+    let delay = 20, acc = 0, prev = null;
     for (let i = 0; i < steps; i++) {
       const node = tiles.get(ALL[(from + i) % ALL.length]);
       const last = prev;
@@ -235,15 +276,16 @@
       }, acc);
       prev = node;
       acc += delay;
-      delay *= 1.10;
+      delay *= 1.16;
     }
     later(() => {
       if (prev) prev.classList.remove('is-flash');
       tiles.get(target).classList.add('is-picked');
+      commitLetter(target);
       sfx.elegir();
       buzz(30);
     }, acc);
-    later(() => beginRound(target), acc + 480);
+    later(() => beginRound(target), acc + 300);
   }
 
   /* ── Ronda activa ────────────────────────────────────────────── */
@@ -257,48 +299,46 @@
     wakeLock = null;
   }
 
+  /* El reloj ya viene corriendo desde la rueda: acá sólo cambia de escena. */
   function beginRound(L) {
     clearTimers();
     state.letter = L;
     state.used.add(L);
-    state.lastBeep = state.duration + 1;
 
+    const left = Math.max(0, state.endsAt - performance.now());
     el.roundLetter.textContent = L;
-    el.seconds.textContent = String(state.duration);
-    el.progress.style.strokeDasharray = RING_LENGTH.toFixed(2);
-    el.progress.style.strokeDashoffset = '0';
-    el.dial.classList.remove('is-urgent');
+    el.seconds.textContent = String(Math.ceil(left / 1000));
+    el.progress.style.strokeDashoffset =
+      (RING_LENGTH * (1 - left / (state.duration * 1000))).toFixed(2);
+    el.dial.classList.toggle('is-urgent', left / 1000 <= URGENT_AT);
     el.basta.disabled = false;
     el.basta.classList.remove('is-slammed');
 
-    wipeTo(() => {
-      // El reloj arranca cuando la escena aparece, no cuando cae la cortina.
-      state.endsAt = performance.now() + state.duration * 1000;
-      show('activa');
-      sfx.arrancar();
-      keepAwake();
-      // rAF dibuja la cuenta; el setTimeout garantiza el corte aunque el
-      // navegador congele los frames con la pestaña en segundo plano.
-      later(() => { if (state.phase === 'activa') endRound('tiempo'); }, state.duration * 1000 + 40);
-      state.raf = requestAnimationFrame(tickRound);
-    }, 'var(--menta)');
+    wipeTo(() => show('activa'), 'var(--menta)');
   }
 
-  function tickRound(now) {
-    if (state.phase !== 'activa') return;
+  function tickClock(now) {
+    const enRueda = state.phase === 'preparando';
+    if (!enRueda && state.phase !== 'activa') return;
+
     const left = state.endsAt - now;
     if (left <= 0) { endRound('tiempo'); return; }
 
+    // Mismo reloj, dos caras: el anillo de la rueda o el del disco.
+    const secEl  = enRueda ? el.wheelSeconds  : el.seconds;
+    const ringEl = enRueda ? el.wheelProgress : el.progress;
+    const hostEl = enRueda ? el.wheel         : el.dial;
+
     const secs = Math.ceil(left / 1000);
-    if (el.seconds.textContent !== String(secs)) el.seconds.textContent = String(secs);
-    el.progress.style.strokeDashoffset =
+    if (secEl.textContent !== String(secs)) secEl.textContent = String(secs);
+    ringEl.style.strokeDashoffset =
       (RING_LENGTH * (1 - left / (state.duration * 1000))).toFixed(2);
 
     if (secs <= URGENT_AT) {
-      el.dial.classList.add('is-urgent');
+      hostEl.classList.add('is-urgent');
       if (secs < state.lastBeep) { state.lastBeep = secs; sfx.cuenta(); }
     }
-    state.raf = requestAnimationFrame(tickRound);
+    state.raf = requestAnimationFrame(tickClock);
   }
 
   function hitBasta() {
@@ -311,20 +351,29 @@
   function endRound(kind) {
     cancelAnimationFrame(state.raf);
     state.raf = 0;
+    clearTimeout(state.endTimer);
     state.phase = 'fin';                            // corta el reloj al instante
     clearTimers();
     releaseAwake();
     el.dial.classList.remove('is-urgent');
+    el.wheel.classList.remove('is-urgent');
 
     if (kind === 'basta') { sfx.basta(); buzz([40, 30, 90]); }
-    else { sfx.tiempo(); buzz([120, 80, 120]); el.seconds.textContent = '0'; }
+    else {
+      sfx.tiempo(); buzz([120, 80, 120]);
+      el.seconds.textContent = '0';
+      el.wheelSeconds.textContent = '0';
+    }
 
     el.finScene.dataset.variant = kind;
     el.endTitle.textContent = kind === 'basta' ? '¡BASTA!' : '¡TIEMPO!';
     el.endSub.textContent = kind === 'basta'
       ? 'Se terminó el tiempo.'
       : 'Se acabaron los segundos.';
-    el.endLetter.textContent = state.letter;
+    // Se puede acabar el tiempo sin que nadie haya elegido letra.
+    el.endLetterLine.hidden = !state.letter;
+    el.endNoLetter.hidden = !!state.letter;
+    if (state.letter) el.endLetter.textContent = state.letter;
 
     el.nueva.disabled = true;
     el.nueva.classList.remove('is-arming');
@@ -344,9 +393,13 @@
   /* ── Salidas ─────────────────────────────────────────────────── */
   function toHome() {
     clearTimers();
+    clearTimeout(state.endTimer);
     cancelAnimationFrame(state.raf);
     releaseAwake();
     state.used.clear();
+    state.letter = null;
+    el.wheel.classList.remove('is-urgent');
+    el.dial.classList.remove('is-urgent');
     wipeTo(() => show('inicio'), 'var(--uva)');
   }
 
@@ -395,7 +448,8 @@
 
   // Si vuelven a la pestaña con la pantalla bloqueada, recupera el wake lock.
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && state.phase === 'activa') keepAwake();
+    if (document.visibilityState === 'visible' &&
+        (state.phase === 'preparando' || state.phase === 'activa')) keepAwake();
   });
 
   /* ── Arranque ────────────────────────────────────────────────── */

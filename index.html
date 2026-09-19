@@ -52,10 +52,15 @@
       <p class="kicker" id="kicker-wheel">Elegí una letra</p>
       <div class="wheel" id="wheel">
         <div class="wheel__disc" aria-hidden="true"></div>
+        <svg class="wheel__clock" viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="wheel__clock-track" cx="100" cy="100" r="92"></circle>
+          <circle class="wheel__clock-fill" id="wheel-progress" cx="100" cy="100" r="92"></circle>
+        </svg>
         <div class="wheel__letters" id="wheel-letters" role="group" aria-label="Letras disponibles"></div>
         <button class="spin" type="button" id="btn-azar">
           <span class="spin__small">AL</span>
           <span class="spin__big">AZAR</span>
+          <span class="spin__time" role="timer" aria-live="off"><span id="wheel-seconds">15</span><small>s</small></span>
         </button>
       </div>
       <button class="link-btn" type="button" id="btn-salir">Salir de la partida</button>
@@ -82,7 +87,8 @@
       <div class="end">
         <h2 class="end__title" id="end-title" aria-live="assertive">¡BASTA!</h2>
         <p class="end__sub" id="end-sub">Se terminó el tiempo.</p>
-        <p class="end__letter">Jugaron con la <strong id="end-letter">A</strong></p>
+        <p class="end__letter" id="end-letter-line">Jugaron con la <strong id="end-letter">A</strong></p>
+        <p class="end__letter end__letter--none" id="end-noletter" hidden>Nadie llegó a elegir letra</p>
         <p class="end__hint">Comparen las respuestas en voz alta.</p>
       </div>
       <button class="btn btn--again" type="button" id="btn-nueva" disabled>NUEVA RONDA</button>
