@@ -103,7 +103,8 @@
         <button class="spin" type="button" id="btn-azar">
           <span class="spin__small">AL</span>
           <span class="spin__big">AZAR</span>
-          <span class="spin__time" role="timer" aria-live="off"><span id="wheel-seconds">10</span><small>s</small></span>
+          <span class="spin__time" role="timer" aria-live="off"><span
+              id="wheel-seconds">10</span><small>s</small></span>
         </button>
       </div>
       <button class="link-btn" type="button" id="btn-salir">Salir de la partida</button>
@@ -143,6 +144,19 @@
         <p class="end__sub">Se acabó el tiempo.</p>
       </div>
       <button class="btn btn--again" type="button" id="btn-nueva-partida" disabled>NUEVA PARTIDA</button>
+    </section>
+
+    <!-- ══ 5. VICTORIA — se jugaron todas las letras ══ -->
+    <section class="scene scene--win" id="scene-victoria" data-scene="victoria" hidden>
+      <div class="burst" aria-hidden="true"></div>
+      <div class="end">
+        <h2 class="end__title" id="win-title" aria-live="assertive">¡GANARON!</h2>
+        <p class="win__time">
+          <strong id="win-time">0:00</strong>
+          <span>de juego</span>
+        </p>
+      </div>
+      <button class="btn btn--again" type="button" id="btn-otra" disabled>OTRA PARTIDA</button>
     </section>
 
   </main>

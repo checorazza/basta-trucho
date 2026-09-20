@@ -472,6 +472,21 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
   -webkit-mask-image:radial-gradient(circle,#000 18%,transparent 62%);
 }
 @keyframes turn{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+/* "¡GANARON!" tiene 9 caracteres contra los 8 de "¡TIEMPO!": con el mismo
+   cuerpo se sale por los costados en un celular. */
+.scene--win .end__title{font-size:clamp(2rem,10.8vw,7rem);}
+.win__time{
+  margin:12px 0 0; display:flex; flex-direction:column; align-items:center; gap:3px;
+}
+.win__time strong{
+  font-family:'Chango',Impact,sans-serif; line-height:1; color:var(--papel);
+  font-size:clamp(2.4rem,11vw,3.6rem); font-variant-numeric:tabular-nums;
+  text-shadow:0 5px 0 var(--rojo-deep);
+}
+.win__time span{
+  font-size:.72rem; font-weight:900; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--papel-dim);
+}
 
 .end{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;}
 .end__title{

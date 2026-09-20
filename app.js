@@ -69,7 +69,8 @@
       inicio: $('scene-inicio'),
       preparando: $('scene-preparando'),
       activa: $('scene-activa'),
-      fin: $('scene-fin')
+      fin: $('scene-fin'),
+      victoria: $('scene-victoria')
     },
     empezar: $('btn-empezar'),
     durMenos: $('dur-menos'), durMas: $('dur-mas'), durValor: $('dur-valor'),
@@ -87,7 +88,8 @@
     basta: $('btn-basta'),
     pausa: $('pausa'), pausaSeconds: $('pausa-seconds'), seguir: $('btn-seguir'),
     pausaBtns: [...document.querySelectorAll('.pausa-btn')],
-    nuevaPartida: $('btn-nueva-partida')
+    nuevaPartida: $('btn-nueva-partida'),
+    winTime: $('win-time'), otra: $('btn-otra')
   };
 
   const state = {
@@ -96,6 +98,9 @@
     roundDur: DUR_DEF,   // lo que dura la ronda en curso
     mode: 'normal',
     played: 0,           // letras jugadas en esta partida
+    gameStart: 0,        // para el tiempo total de la victoria
+    pausedMs: 0,         // pausas acumuladas, no cuentan como juego
+    pauseAt: 0,
     bajo: false,         // el reloj acaba de bajar un escalón
     sound: true,
     category: '',
@@ -175,6 +180,13 @@
       this.noise({ dur: 0.22, gain: 0.3, cutoff: 2600 });
       this.tone({ freq: 160, to: 42, dur: 0.42, type: 'sawtooth', gain: 0.3 });
       this.tone({ freq: 330, dur: 0.16, type: 'square', gain: 0.18, at: 0.02 });
+    },
+    victoria() {
+      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
+        this.tone({ freq: f, dur: 0.2, type: 'triangle', gain: 0.2, at: i * 0.12 }));
+      [523.25, 659.25, 783.99, 1318.5].forEach(f =>            // acorde final
+        this.tone({ freq: f, dur: 0.95, type: 'triangle', gain: 0.12, at: 0.52 }));
+      this.noise({ dur: 0.5, gain: 0.05, cutoff: 1300, at: 0.5 });
     },
     tiempo() {
       for (let i = 0; i < 3; i++) {
@@ -552,6 +564,7 @@
 
   function pausar() {
     if (state.paused || state.frozen) return;
+    state.pauseAt = performance.now();
     if (state.phase !== 'preparando' && state.phase !== 'activa') return;
     state.paused = true;
     state.leftMs = Math.max(0, state.endsAt - performance.now());
@@ -564,6 +577,7 @@
 
   function seguir() {
     if (!state.paused) return;
+    state.pausedMs += performance.now() - state.pauseAt;
     state.paused = false;
     pintarPausa();
     sfx.elegir();
@@ -582,7 +596,9 @@
     el.dial.classList.remove('is-urgent');
     sfx.basta();
     buzz([40, 30, 90]);
-    wipeTo(toWheel, 'var(--rojo)', '¡BASTA!');
+    // Si era la última letra, detrás de la cortina aparece la victoria.
+    const gano = state.used.size >= ALL.length;
+    wipeTo(gano ? victoria : toWheel, 'var(--rojo)', '¡BASTA!');
   }
 
   /* Única salida a la pantalla de fin: se acabó el tiempo. */
@@ -614,6 +630,33 @@
     }, 'var(--rojo)');
   }
 
+  /* Se jugaron todas las letras: ganaron. */
+  function victoria() {
+    state.phase = 'victoria';
+    stopClock();
+    clearTimers();
+    releaseAwake();
+    el.dial.classList.remove('is-urgent');
+    el.wheel.classList.remove('is-urgent');
+
+    const total = Math.max(0, performance.now() - state.gameStart - state.pausedMs);
+    const seg = Math.round(total / 1000);
+    el.winTime.textContent = Math.floor(seg / 60) + ':' + String(seg % 60).padStart(2, '0');
+
+    sfx.victoria();
+    buzz([30, 60, 30, 60, 120]);
+
+    el.otra.disabled = true;
+    el.otra.classList.remove('is-arming');
+    show('victoria');
+    void el.otra.offsetWidth;
+    el.otra.classList.add('is-arming');
+    later(() => {
+      el.otra.disabled = false;
+      el.otra.classList.remove('is-arming');
+    }, 800);
+  }
+
   /* ── Salidas ─────────────────────────────────────────────────── */
   function toHome() {
     clearTimers();
@@ -623,6 +666,7 @@
     state.letter = null;
     state.played = 0;
     state.bajo = false;
+    state.pausedMs = 0;
     state.roundDur = state.duration;
     el.wheel.classList.remove('is-urgent');
     el.dial.classList.remove('is-urgent');
@@ -633,6 +677,8 @@
   el.empezar.addEventListener('click', () => {
     sfx.ready();                 // desbloquea el audio con el primer gesto
     sfx.elegir();
+    state.gameStart = performance.now();
+    state.pausedMs = 0;
     wipeTo(toWheel, 'var(--rojo)');
   });
 
@@ -705,6 +751,12 @@
   el.basta.addEventListener('click', hitBasta);
   el.pausaBtns.forEach(b => b.addEventListener('click', pausar));
   el.seguir.addEventListener('click', seguir);
+  el.otra.addEventListener('click', () => {
+    if (el.otra.disabled) return;
+    sfx.tick();
+    toHome();
+  });
+
   // Al agotarse el tiempo se termina la partida: vuelve a la pantalla inicial.
   el.nuevaPartida.addEventListener('click', () => {
     if (el.nuevaPartida.disabled) return;
