@@ -212,16 +212,18 @@
       o.textContent = cat;                        // textContent: nunca innerHTML
       return o;
     };
-    if (PRESET_CATS.length && state.myCats.length) {
-      // Con categorías propias conviene separarlas de las de fábrica.
-      const g1 = document.createElement('optgroup'); g1.label = 'De fábrica';
-      PRESET_CATS.forEach(c => g1.appendChild(opcion(c)));
-      const g2 = document.createElement('optgroup'); g2.label = 'Mías';
-      state.myCats.forEach(c => g2.appendChild(opcion(c)));
-      el.catSelect.append(g1, g2);
-    } else {
-      todasLasCats().forEach(c => el.catSelect.appendChild(opcion(c)));
-    }
+    // Siempre agrupadas, aunque no haya propias: sin optgroup el navegador
+    // dibuja las opciones en negrita y sin sangría, y la lista cambiaba de
+    // aspecto justo al crear la primera categoría propia.
+    const grupo = (label, lista) => {
+      if (!lista.length) return;
+      const g = document.createElement('optgroup');
+      g.label = label;
+      lista.forEach(c => g.appendChild(opcion(c)));
+      el.catSelect.appendChild(g);
+    };
+    grupo('Predeterminadas', PRESET_CATS);
+    grupo('Mis categorías', state.myCats);
     el.catSelect.value = state.category;
     el.catDel.hidden = !esPropia(state.category);
     el.catSelect.disabled = !hayCats();
