@@ -69,8 +69,6 @@
     basta: $('btn-basta'),
     pausa: $('pausa'), pausaSeconds: $('pausa-seconds'), seguir: $('btn-seguir'),
     pausaBtns: [...document.querySelectorAll('.pausa-btn')],
-    endLetterLine: $('end-letter-line'), endLetter: $('end-letter'),
-    endNoLetter: $('end-noletter'),
     nuevaPartida: $('btn-nueva-partida')
   };
 
@@ -433,7 +431,7 @@
     el.basta.disabled = false;
     el.basta.classList.remove('is-slammed');
 
-    wipeTo(() => show('activa'), 'var(--menta)', null, true);
+    wipeTo(() => show('activa'), 'var(--papel)', null, true);
   }
 
   function tickClock(now) {
@@ -508,7 +506,7 @@
     el.dial.classList.remove('is-urgent');
     sfx.basta();
     buzz([40, 30, 90]);
-    wipeTo(toWheel, 'var(--coral)', '¡BASTA!');
+    wipeTo(toWheel, 'var(--rojo)', '¡BASTA!');
   }
 
   /* Única salida a la pantalla de fin: se acabó el tiempo. */
@@ -525,11 +523,6 @@
     el.seconds.textContent = '0';
     el.wheelSeconds.textContent = '0';
 
-    // Se puede acabar el tiempo sin que nadie haya elegido letra.
-    el.endLetterLine.hidden = !state.letter;
-    el.endNoLetter.hidden = !!state.letter;
-    if (state.letter) el.endLetter.textContent = state.letter;
-
     el.nuevaPartida.disabled = true;
     el.nuevaPartida.classList.remove('is-arming');
 
@@ -542,7 +535,7 @@
         el.nuevaPartida.disabled = false;
         el.nuevaPartida.classList.remove('is-arming');
       }, 800);
-    }, 'var(--mango)');
+    }, 'var(--rojo)');
   }
 
   /* ── Salidas ─────────────────────────────────────────────────── */
@@ -554,14 +547,14 @@
     state.letter = null;
     el.wheel.classList.remove('is-urgent');
     el.dial.classList.remove('is-urgent');
-    wipeTo(() => show('inicio'), 'var(--uva)');
+    wipeTo(() => show('inicio'), 'var(--ink-700)');
   }
 
   /* ── Eventos ─────────────────────────────────────────────────── */
   el.empezar.addEventListener('click', () => {
     sfx.ready();                 // desbloquea el audio con el primer gesto
     sfx.elegir();
-    wipeTo(toWheel, 'var(--mango)');
+    wipeTo(toWheel, 'var(--rojo)');
   });
 
   /* Un toque mueve un segundo; mantenerlo apretado repite, porque de 5

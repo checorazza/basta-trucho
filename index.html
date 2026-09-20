@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#073A38">
+  <meta name="theme-color" content="#0C0808">
   <title>Basta de Mesa</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,12 +53,11 @@
               <select class="cat-select" id="cat-select" aria-labelledby="lbl-categoria"></select>
             </span>
             <button class="cat-del" type="button" id="cat-del" hidden
-                    aria-label="Borrar la categoría elegida">✕</button>
+              aria-label="Borrar la categoría elegida">✕</button>
           </div>
           <form class="cat-new" id="cat-form">
-            <input class="cat-new__input" id="cat-input" type="text" maxlength="24"
-                   placeholder="O escribí la tuya" autocomplete="off" spellcheck="false"
-                   aria-label="Crear categoría propia">
+            <input class="cat-new__input" id="cat-input" type="text" maxlength="24" placeholder="O escribí la tuya"
+              autocomplete="off" spellcheck="false" aria-label="Crear categoría propia">
             <button class="cat-new__add" type="submit" id="cat-add" aria-label="Agregar categoría">+</button>
           </form>
         </div>
@@ -133,10 +132,7 @@
       <div class="burst" aria-hidden="true"></div>
       <div class="end">
         <h2 class="end__title" aria-live="assertive">¡TIEMPO!</h2>
-        <p class="end__sub">Se acabaron los segundos.</p>
-        <p class="end__letter" id="end-letter-line">Jugaron con la <strong id="end-letter">A</strong></p>
-        <p class="end__letter end__letter--none" id="end-noletter" hidden>Nadie llegó a elegir letra</p>
-        <p class="end__hint">Comparen las respuestas en voz alta.</p>
+        <p class="end__sub">Se acabó el tiempo.</p>
       </div>
       <button class="btn btn--again" type="button" id="btn-nueva-partida" disabled>NUEVA PARTIDA</button>
     </section>
