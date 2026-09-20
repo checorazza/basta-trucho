@@ -171,6 +171,10 @@
       this.noise({ dur: 0.3, gain: 0.06, cutoff: 900, at: 0.05 });
     },
     cuenta() { this.tone({ freq: 1200, dur: 0.045, type: 'sine', gain: 0.13 }); },
+    nope() {                        // letra ya jugada: grave y cayendo
+      this.tone({ freq: 190, dur: 0.09, type: 'square', gain: 0.16 });
+      this.tone({ freq: 135, dur: 0.14, type: 'square', gain: 0.16, at: 0.08 });
+    },
     menos() {                       // el reloj bajó un escalón: dos tonos cayendo
       this.tone({ freq: 740, dur: 0.14, type: 'triangle', gain: 0.18 });
       this.tone({ freq: 440, dur: 0.22, type: 'triangle', gain: 0.18, at: 0.13 });
@@ -354,7 +358,7 @@
   function paintWheel() {
     tiles.forEach((node, L) => {
       node.classList.toggle('is-used', state.used.has(L));
-      node.classList.remove('is-flash', 'is-picked');
+      node.classList.remove('is-flash', 'is-picked', 'is-nope');
       node.disabled = false;
     });
     const quedan = ALL.length - state.used.size;
@@ -425,6 +429,14 @@
 
   function pickLetter(L) {
     if (state.phase !== 'preparando') return;
+    if (state.used.has(L)) {          // ya jugada: se avisa y no pasa nada más
+      const t = tiles.get(L);
+      t.classList.add('is-nope');
+      later(() => t.classList.remove('is-nope'), 220);
+      sfx.nope();
+      buzz(35);
+      return;
+    }
     lockWheel(true);
     const tile = tiles.get(L);
     tile.classList.add('is-picked');

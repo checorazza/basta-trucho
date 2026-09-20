@@ -370,6 +370,8 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
 }
 .letter:active{background:var(--rojo);color:var(--papel);}
 .letter.is-used{background:var(--papel-16);color:var(--papel-dim);box-shadow:none;}
+/* Rebote de rechazo: se encoge y vuelve, con la transición que ya tiene. */
+.letter.is-nope{--s:.84;}
 /* Sin transición al entrar: los pasos del barrido duran menos que los 120ms
    de la transición y el rojo quedaba a medio camino, rosado. Al salir sí
    transiciona, y deja una estela de fichas volviendo al blanco. */
