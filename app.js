@@ -44,6 +44,11 @@
      Contrarreloj: cada CONTRA_CADA letras el reloj baja un escalón,
      hasta el piso. El escalón es proporcional al tiempo inicial, si no
      una partida de 60s tardaría ochenta rondas en notarse. */
+  /* Colchón por la transición: entre que se toca la letra y aparece la ronda
+     la gente mira la cortina, no el reloj. Nunca deja la ronda por encima de
+     su propia duración, así el cartel no muestra más segundos de los que dura. */
+  const GRACIA_MS = 600;
+
   const CONTRA_CADA = 3;
   const pasoContra = () => Math.max(1, Math.round(state.duration * 0.15));
 
@@ -500,6 +505,7 @@
     clearTimers();
     state.letter = L;
     state.used.add(L);
+    congelarReloj();      // la cortina no se cobra; con la ruleta ya viene congelado
 
     // Congelado por la ruleta, endsAt quedó en el pasado: vale lo guardado.
     const left = state.frozen ? state.leftMs
@@ -570,7 +576,7 @@
   function descongelarReloj() {
     if (!state.frozen) return;
     state.frozen = false;
-    startClock(state.leftMs);
+    startClock(Math.min(state.roundDur * 1000, state.leftMs + GRACIA_MS));
     pintarPausa();
   }
 
