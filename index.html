@@ -39,6 +39,14 @@
 
       <div class="settings">
         <div class="setting">
+          <span class="setting__label" id="lbl-modo">Modo</span>
+          <div class="modos" role="group" aria-labelledby="lbl-modo">
+            <button class="modo" type="button" id="modo-normal" aria-pressed="true">NORMAL</button>
+            <button class="modo" type="button" id="modo-contra" aria-pressed="false">CONTRARRELOJ</button>
+          </div>
+          <p class="modo__ayuda" id="modo-ayuda" hidden></p>
+        </div>
+        <div class="setting">
           <span class="setting__label" id="lbl-duracion">Duración de la ronda</span>
           <div class="stepper" role="group" aria-labelledby="lbl-duracion">
             <button class="stepper__btn" type="button" id="dur-menos" aria-label="Un segundo menos">−</button>

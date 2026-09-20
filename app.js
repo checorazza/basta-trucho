@@ -39,13 +39,28 @@
     return lista.filter(c => typeof c === 'string' && c.trim()).map(limpiarCat);
   }
 
+  /* ── Modos ───────────────────────────────────────────────────
+     Normal: todas las rondas duran lo configurado.
+     Contrarreloj: cada CONTRA_CADA letras el reloj baja un escalón,
+     hasta el piso. El escalón es proporcional al tiempo inicial, si no
+     una partida de 60s tardaría ochenta rondas en notarse. */
+  const CONTRA_CADA = 3;
+  const pasoContra = () => Math.max(1, Math.round(state.duration * 0.15));
+
   const DUR_MIN = 5;      // pedido explícito
   const DUR_DEF = 10;     // con el que arranca la primera partida
   const DUR_MAX = 120;    // tope de sentido común: dos minutos
   const RING_LENGTH = 2 * Math.PI * 92;   // r=92 en el viewBox del reloj
   // Segundos de tensión final: 3, salvo en rondas cortas donde serían casi
   // toda la ronda (con 5s pintaría 3 de rojo).
-  const urgentAt = () => Math.min(3, Math.max(1, Math.ceil(state.duration / 3)));
+  const urgentAt = () => Math.min(3, Math.max(1, Math.ceil(state.roundDur / 3)));
+
+  // Lo que dura la ronda que está por empezar.
+  function duracionRonda() {
+    if (state.mode !== 'contra') return state.duration;
+    const nivel = Math.floor(state.played / CONTRA_CADA);
+    return Math.max(DUR_MIN, state.duration - nivel * pasoContra());
+  }
 
   const $ = (id) => document.getElementById(id);
   const el = {
@@ -58,6 +73,8 @@
     },
     empezar: $('btn-empezar'),
     durMenos: $('dur-menos'), durMas: $('dur-mas'), durValor: $('dur-valor'),
+    lblDuracion: $('lbl-duracion'),
+    modoNormal: $('modo-normal'), modoContra: $('modo-contra'), modoAyuda: $('modo-ayuda'),
     sonido: $('btn-sonido'), sonidoEstado: $('sonido-estado'),
     catSelect: $('cat-select'), catDel: $('cat-del'),
     catForm: $('cat-form'), catInput: $('cat-input'),
@@ -75,7 +92,11 @@
 
   const state = {
     phase: 'inicio',
-    duration: DUR_DEF,
+    duration: DUR_DEF,   // lo configurado; en contrarreloj es el arranque
+    roundDur: DUR_DEF,   // lo que dura la ronda en curso
+    mode: 'normal',
+    played: 0,           // letras jugadas en esta partida
+    bajo: false,         // el reloj acaba de bajar un escalón
     sound: true,
     category: '',
     myCats: [],
@@ -145,6 +166,11 @@
       this.noise({ dur: 0.3, gain: 0.06, cutoff: 900, at: 0.05 });
     },
     cuenta() { this.tone({ freq: 1200, dur: 0.045, type: 'sine', gain: 0.13 }); },
+    menos() {                       // el reloj bajó un escalón: dos tonos cayendo
+      this.tone({ freq: 740, dur: 0.14, type: 'triangle', gain: 0.18 });
+      this.tone({ freq: 440, dur: 0.22, type: 'triangle', gain: 0.18, at: 0.13 });
+      this.noise({ dur: 0.25, gain: 0.05, cutoff: 700, at: 0.1 });
+    },
     basta() {
       this.noise({ dur: 0.22, gain: 0.3, cutoff: 2600 });
       this.tone({ freq: 160, to: 42, dur: 0.42, type: 'sawtooth', gain: 0.3 });
@@ -167,6 +193,7 @@
       const d = parseInt(localStorage.getItem('basta:duracion'), 10);
       if (Number.isFinite(d) && d >= DUR_MIN && d <= DUR_MAX) state.duration = d;
       state.sound = localStorage.getItem('basta:sonido') !== '0';
+      if (localStorage.getItem('basta:modo') === 'contra') state.mode = 'contra';
       const mias = JSON.parse(localStorage.getItem('basta:misCategorias') || '[]');
       if (Array.isArray(mias)) {
         state.myCats = mias.filter(c => typeof c === 'string' && c.trim())
@@ -180,11 +207,22 @@
     try {
       localStorage.setItem('basta:duracion', String(state.duration));
       localStorage.setItem('basta:sonido', state.sound ? '1' : '0');
+      localStorage.setItem('basta:modo', state.mode);
       localStorage.setItem('basta:categoria', state.category);
       localStorage.setItem('basta:misCategorias', JSON.stringify(state.myCats));
     } catch (e) {}
   }
   function paintPrefs() {
+    const contra = state.mode === 'contra';
+    el.modoNormal.setAttribute('aria-pressed', String(!contra));
+    el.modoContra.setAttribute('aria-pressed', String(contra));
+    el.modoAyuda.hidden = !contra;
+    el.modoAyuda.textContent = contra
+      ? 'Cada ' + CONTRA_CADA + ' letras el reloj baja ' + pasoContra() +
+        's, hasta un piso de ' + DUR_MIN + 's.'
+      : '';
+    el.lblDuracion.textContent = contra ? 'Duración inicial' : 'Duración de la ronda';
+
     el.durValor.textContent = String(state.duration);
     el.durMenos.disabled = state.duration <= DUR_MIN;
     el.durMas.disabled = state.duration >= DUR_MAX;
@@ -308,9 +346,14 @@
       node.disabled = false;
     });
     const quedan = ALL.length - state.used.size;
-    el.kickerWheel.textContent = state.used.size === 0
-      ? 'Elegí una letra'
-      : (quedan === 0 ? 'Vuelven todas las letras' : 'Elegí una letra · quedan ' + quedan);
+    let texto;
+    if (state.bajo)                   texto = '¡Menos tiempo! · ' + state.roundDur + 's';
+    else if (state.mode === 'contra') texto = 'Elegí una letra · ' + state.roundDur + 's';
+    else if (state.used.size === 0)   texto = 'Elegí una letra';
+    else if (quedan === 0)            texto = 'Vuelven todas las letras';
+    else                              texto = 'Elegí una letra · quedan ' + quedan;
+    el.kickerWheel.textContent = texto;
+    el.kickerWheel.classList.toggle('is-baja', state.bajo);
   }
   function lockWheel(locked) {
     tiles.forEach(n => { n.disabled = locked; });
@@ -325,12 +368,15 @@
     stopClock();
     if (state.used.size >= ALL.length) state.used.clear();
     state.letter = null;
+    const antes = state.roundDur;
+    state.roundDur = duracionRonda();
+    state.bajo = state.mode === 'contra' && state.played > 0 && state.roundDur < antes;
     paintWheel();
     lockWheel(false);
 
     el.wheel.classList.remove('is-urgent');
     el.dial.classList.remove('is-urgent');
-    el.wheelSeconds.textContent = String(state.duration);
+    el.wheelSeconds.textContent = String(state.roundDur);
     el.wheelProgress.style.strokeDasharray = RING_LENGTH.toFixed(2);
     el.wheelProgress.style.strokeDashoffset = '0';
     el.progress.style.strokeDasharray = RING_LENGTH.toFixed(2);
@@ -338,14 +384,14 @@
 
     show('preparando');
     startClock();
-    sfx.arrancar();
+    if (state.bajo) sfx.menos(); else sfx.arrancar();
     keepAwake();
   }
 
   /* Sin argumento arranca de cero; con `restante` retoma una pausa. */
   function startClock(restante) {
-    const ms = restante == null ? state.duration * 1000 : restante;
-    if (restante == null) state.lastBeep = state.duration + 1;
+    const ms = restante == null ? state.roundDur * 1000 : restante;
+    if (restante == null) state.lastBeep = state.roundDur + 1;
     state.endsAt = performance.now() + ms;
     // rAF dibuja la cuenta; el setTimeout garantiza el corte aunque el
     // navegador congele los frames con la pestaña en segundo plano.
@@ -362,6 +408,7 @@
   function commitLetter(L) {
     state.letter = L;
     state.used.add(L);
+    state.played++;           // el escalón de contrarreloj cuenta letras
   }
 
   function pickLetter(L) {
@@ -436,7 +483,7 @@
     el.roundLetter.textContent = L;
     el.seconds.textContent = String(Math.ceil(left / 1000));
     el.progress.style.strokeDashoffset =
-      (RING_LENGTH * (1 - left / (state.duration * 1000))).toFixed(2);
+      (RING_LENGTH * (1 - left / (state.roundDur * 1000))).toFixed(2);
     el.dial.classList.toggle('is-urgent', left / 1000 <= urgentAt());
     el.basta.disabled = false;
     el.basta.classList.remove('is-slammed');
@@ -459,7 +506,7 @@
     const secs = Math.ceil(left / 1000);
     if (secEl.textContent !== String(secs)) secEl.textContent = String(secs);
     ringEl.style.strokeDashoffset =
-      (RING_LENGTH * (1 - left / (state.duration * 1000))).toFixed(2);
+      (RING_LENGTH * (1 - left / (state.roundDur * 1000))).toFixed(2);
 
     if (secs <= urgentAt()) {
       hostEl.classList.add('is-urgent');
@@ -574,6 +621,9 @@
     releaseAwake();
     state.used.clear();
     state.letter = null;
+    state.played = 0;
+    state.bajo = false;
+    state.roundDur = state.duration;
     el.wheel.classList.remove('is-urgent');
     el.dial.classList.remove('is-urgent');
     wipeTo(() => show('inicio'), 'var(--ink-700)');
@@ -607,6 +657,14 @@
   }
   conRepeticion(el.durMenos, -1);
   conRepeticion(el.durMas, +1);
+
+  const ponerModo = (m) => () => {
+    if (state.mode === m) return;
+    state.mode = m;
+    savePrefs(); paintPrefs(); sfx.tick();
+  };
+  el.modoNormal.addEventListener('click', ponerModo('normal'));
+  el.modoContra.addEventListener('click', ponerModo('contra'));
 
   el.catSelect.addEventListener('change', () => {
     state.category = el.catSelect.value;
