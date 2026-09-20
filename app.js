@@ -81,6 +81,7 @@
     durMenos: $('dur-menos'), durMas: $('dur-mas'), durValor: $('dur-valor'),
     lblDuracion: $('lbl-duracion'),
     modoNormal: $('modo-normal'), modoContra: $('modo-contra'), modoAyuda: $('modo-ayuda'),
+    finRonda: $('fin-ronda'), finPartida: $('fin-partida'),
     sonido: $('btn-sonido'), sonidoEstado: $('sonido-estado'),
     compacto: $('btn-compacto'), compactoEstado: $('compacto-estado'),
     catSelect: $('cat-select'), catDel: $('cat-del'),
@@ -88,7 +89,7 @@
     catWheel: $('cat-wheel'), catRound: $('cat-round'),
     wheel: $('wheel'), wheelLetters: $('wheel-letters'), azar: $('btn-azar'),
     wheelProgress: $('wheel-progress'), wheelSeconds: $('wheel-seconds'),
-    kickerWheel: $('kicker-wheel'), salir: $('btn-salir'),
+    salir: $('btn-salir'),
     dial: $('dial'), progress: $('dial-progress'),
     roundLetter: $('round-letter'), seconds: $('round-seconds'),
     basta: $('btn-basta'),
@@ -110,6 +111,8 @@
     bajo: false,         // el reloj acaba de bajar un escalón
     sound: true,
     compact: false,     // la rueda saca las usadas en vez de atenuarlas
+    onTimeout: 'partida',  // al acabarse el tiempo: 'partida' o 'ronda'
+    finSigue: false,       // el botón del final vuelve a la rueda, no al inicio
     category: '',
     myCats: [],
     letter: null,
@@ -218,6 +221,7 @@
       state.sound = localStorage.getItem('basta:sonido') !== '0';
       if (localStorage.getItem('basta:modo') === 'contra') state.mode = 'contra';
       state.compact = localStorage.getItem('basta:compacto') === '1';
+      if (localStorage.getItem('basta:altiempo') === 'ronda') state.onTimeout = 'ronda';
       const mias = JSON.parse(localStorage.getItem('basta:misCategorias') || '[]');
       if (Array.isArray(mias)) {
         state.myCats = mias.filter(c => typeof c === 'string' && c.trim())
@@ -233,6 +237,7 @@
       localStorage.setItem('basta:sonido', state.sound ? '1' : '0');
       localStorage.setItem('basta:modo', state.mode);
       localStorage.setItem('basta:compacto', state.compact ? '1' : '0');
+      localStorage.setItem('basta:altiempo', state.onTimeout);
       localStorage.setItem('basta:categoria', state.category);
       localStorage.setItem('basta:misCategorias', JSON.stringify(state.myCats));
     } catch (e) {}
@@ -253,6 +258,9 @@
     el.durMas.disabled = state.duration >= DUR_MAX;
     el.sonido.setAttribute('aria-pressed', String(state.sound));
     el.sonidoEstado.textContent = state.sound ? 'SÍ' : 'NO';
+    const sigue = state.onTimeout === 'ronda';
+    el.finRonda.setAttribute('aria-pressed', String(sigue));
+    el.finPartida.setAttribute('aria-pressed', String(!sigue));
     el.compacto.setAttribute('aria-pressed', String(state.compact));
     el.compactoEstado.textContent = state.compact ? 'SÍ' : 'NO';
   }
@@ -401,15 +409,6 @@
       node.classList.remove('is-flash', 'is-picked', 'is-nope');
       node.disabled = false;
     });
-    const quedan = ALL.length - state.used.size;
-    let texto;
-    if (state.bajo)                   texto = '¡Menos tiempo! · ' + state.roundDur + 's';
-    else if (state.mode === 'contra') texto = 'Elegí una letra · ' + state.roundDur + 's';
-    else if (state.used.size === 0)   texto = 'Elegí una letra';
-    else if (quedan === 0)            texto = 'Vuelven todas las letras';
-    else                              texto = 'Elegí una letra · quedan ' + quedan;
-    el.kickerWheel.textContent = texto;
-    el.kickerWheel.classList.toggle('is-baja', state.bajo);
   }
   function lockWheel(locked) {
     tiles.forEach(n => { n.disabled = locked; });
@@ -670,6 +669,10 @@
     el.seconds.textContent = '0';
     el.wheelSeconds.textContent = '0';
 
+    /* Si eligieron seguir la partida, el final es sólo el corte de la ronda.
+       Sin letras libres no hay ronda que seguir, así que vuelve al inicio. */
+    state.finSigue = state.onTimeout === 'ronda' && state.used.size < ALL.length;
+    el.nuevaPartida.textContent = state.finSigue ? 'NUEVA RONDA' : 'NUEVA PARTIDA';
     el.nuevaPartida.disabled = true;
     el.nuevaPartida.classList.remove('is-arming');
 
@@ -767,6 +770,14 @@
   el.modoNormal.addEventListener('click', ponerModo('normal'));
   el.modoContra.addEventListener('click', ponerModo('contra'));
 
+  const ponerFin = (v) => () => {
+    if (state.onTimeout === v) return;
+    state.onTimeout = v;
+    savePrefs(); paintPrefs(); sfx.tick();
+  };
+  el.finRonda.addEventListener('click', ponerFin('ronda'));
+  el.finPartida.addEventListener('click', ponerFin('partida'));
+
   el.catSelect.addEventListener('change', () => {
     state.category = el.catSelect.value;
     savePrefs(); paintCategory(); sfx.tick();
@@ -817,11 +828,11 @@
     toHome();
   });
 
-  // Al agotarse el tiempo se termina la partida: vuelve a la pantalla inicial.
   el.nuevaPartida.addEventListener('click', () => {
     if (el.nuevaPartida.disabled) return;
     sfx.tick();
-    toHome();
+    if (state.finSigue) wipeTo(toWheel, 'var(--rojo)');   // la rueda sigue como estaba
+    else toHome();
   });
 
   // Teclado: útil cuando la partida se juega en una pantalla compartida.

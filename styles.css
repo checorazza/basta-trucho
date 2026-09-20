@@ -295,13 +295,6 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
 .pausa-btn:active{transform:scale(.9);background:var(--papel-22);}
 
 .wheel-head{display:flex;flex-direction:column;align-items:center;gap:10px;}
-/* La tarjeta pasó a ser el titular de la escena, así que el kicker baja de rango. */
-.kicker{
-  margin:0; font-weight:900; letter-spacing:.04em; color:var(--papel-dim);
-  font-size:clamp(.9rem,3.7vw,1.15rem);
-  max-width:24ch; text-wrap:balance; line-height:1.2;
-}
-.kicker.is-baja{color:var(--rojo);}
 .wheel{
   /* El anillo crece con la pantalla y siempre deja 17px de margen al borde. */
   --wheel:min(100vw - 34px, 62vh, 620px);
@@ -603,7 +596,6 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
   .wheel-head{max-width:22vw;}
   .cat-card{padding:7px 12px 9px;}
   .cat-card__text{font-size:clamp(.85rem,2.7vh,1.1rem);}
-  .kicker{max-width:14ch;font-size:clamp(.8rem,2.4vh,1rem);}
   .link-btn{font-size:.78rem;padding:10px 12px;}
 }
 @media (min-width:900px){

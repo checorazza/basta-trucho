@@ -47,6 +47,13 @@
           <p class="modo__ayuda" id="modo-ayuda" hidden></p>
         </div>
         <div class="setting">
+          <span class="setting__label" id="lbl-altiempo">Al acabarse el tiempo</span>
+          <div class="modos" role="group" aria-labelledby="lbl-altiempo">
+            <button class="modo" type="button" id="fin-ronda" aria-pressed="false">NUEVA RONDA</button>
+            <button class="modo" type="button" id="fin-partida" aria-pressed="true">NUEVA PARTIDA</button>
+          </div>
+        </div>
+        <div class="setting">
           <span class="setting__label" id="lbl-duracion">Duración de la ronda</span>
           <div class="stepper" role="group" aria-labelledby="lbl-duracion">
             <button class="stepper__btn" type="button" id="dur-menos" aria-label="Un segundo menos">−</button>
@@ -71,8 +78,7 @@
         </div>
         <div class="setting setting--row">
           <span class="setting__label" id="lbl-compacto">Rueda compacta</span>
-          <button class="toggle" type="button" id="btn-compacto" aria-labelledby="lbl-compacto"
-            aria-pressed="false">
+          <button class="toggle" type="button" id="btn-compacto" aria-labelledby="lbl-compacto" aria-pressed="false">
             <span class="toggle__knob" aria-hidden="true"></span>
             <span class="toggle__text" id="compacto-estado">NO</span>
           </button>
@@ -99,7 +105,6 @@
             <strong class="cat-card__text" id="cat-wheel"></strong>
           </div>
         </div>
-        <p class="kicker" id="kicker-wheel">Elegí una letra</p>
       </div>
       <div class="wheel" id="wheel">
         <div class="wheel__disc" aria-hidden="true"></div>
