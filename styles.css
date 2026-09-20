@@ -552,7 +552,10 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
   /* La tarjeta queda arriba; el disco y el BASTA se reparten el ancho. */
   .round-stage{flex-direction:row;gap:clamp(30px,5vw,70px);}
   .dial{--dial:min(34vw, 52vh, 420px);}
-  .basta{width:min(42vw,480px);height:min(40vh,300px);font-size:clamp(3.5rem,7vw,6.5rem);}
+  /* El ancho del botón se topa en 480px pero la fuente seguía creciendo:
+     de ~1480px de ventana en adelante "BASTA" se salía por los costados.
+     Con 5.5rem de tope el texto mide 421px y siempre entra. */
+  .basta{width:min(42vw,480px);height:min(40vh,300px);font-size:clamp(2.6rem,6.6vw,5.5rem);}
 }
 /* Celular acostado: el ancho sobra y la altura no, así que la rueda se pone
    entre el título y el botón de salir en vez de apilarse y hacer scroll. */
