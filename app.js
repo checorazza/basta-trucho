@@ -40,6 +40,7 @@
   }
 
   const DUR_MIN = 5;      // pedido explícito
+  const DUR_DEF = 10;     // con el que arranca la primera partida
   const DUR_MAX = 120;    // tope de sentido común: dos minutos
   const RING_LENGTH = 2 * Math.PI * 92;   // r=92 en el viewBox del reloj
   // Segundos de tensión final: 3, salvo en rondas cortas donde serían casi
@@ -74,7 +75,7 @@
 
   const state = {
     phase: 'inicio',
-    duration: DUR_MIN,
+    duration: DUR_DEF,
     sound: true,
     category: '',
     myCats: [],
