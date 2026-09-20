@@ -487,8 +487,8 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:clamp(14px,3vh,26px); padding:clamp(20px,4vh,40px) 16px; text-align:center;
   background:rgba(8,5,6,.92);
-  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-  animation:pausaIn .2s ease-out both;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  animation:pausaIn .1s ease-out both;
 }
 @keyframes pausaIn{from{opacity:0}to{opacity:1}}
 .pausa__titulo{
