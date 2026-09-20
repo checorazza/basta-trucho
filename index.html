@@ -21,7 +21,7 @@
   <div class="pausa" id="pausa" role="dialog" aria-modal="true" aria-labelledby="pausa-titulo" hidden>
     <span class="pausa-icon pausa-icon--grande" aria-hidden="true"><span></span><span></span></span>
     <p class="pausa__titulo" id="pausa-titulo">EN PAUSA</p>
-    <p class="pausa__reloj">El reloj quedó en <strong id="pausa-seconds">15</strong>s</p>
+    <p class="pausa__reloj">El reloj quedó en <strong id="pausa-seconds">5</strong>s</p>
     <button class="btn btn--seguir" type="button" id="btn-seguir">SEGUIR</button>
   </div>
 
@@ -40,9 +40,10 @@
       <div class="settings">
         <div class="setting">
           <span class="setting__label" id="lbl-duracion">Duración de la ronda</span>
-          <div class="chips" role="group" aria-labelledby="lbl-duracion" id="chips-duracion">
-            <button class="chip" type="button" id="dur-10" data-dur="10">10<small>s</small></button>
-            <button class="chip" type="button" id="dur-15" data-dur="15">15<small>s</small></button>
+          <div class="stepper" role="group" aria-labelledby="lbl-duracion">
+            <button class="stepper__btn" type="button" id="dur-menos" aria-label="Un segundo menos">−</button>
+            <span class="stepper__value" aria-live="polite"><strong id="dur-valor">5</strong><small>s</small></span>
+            <button class="stepper__btn" type="button" id="dur-mas" aria-label="Un segundo más">+</button>
           </div>
         </div>
         <div class="setting">
@@ -95,7 +96,7 @@
         <button class="spin" type="button" id="btn-azar">
           <span class="spin__small">AL</span>
           <span class="spin__big">AZAR</span>
-          <span class="spin__time" role="timer" aria-live="off"><span id="wheel-seconds">15</span><small>s</small></span>
+          <span class="spin__time" role="timer" aria-live="off"><span id="wheel-seconds">5</span><small>s</small></span>
         </button>
       </div>
       <button class="link-btn" type="button" id="btn-salir">Salir de la partida</button>
@@ -119,7 +120,7 @@
             <circle class="dial__progress" id="dial-progress" cx="100" cy="100" r="92"></circle>
           </svg>
           <div class="dial__letter" id="round-letter">A</div>
-          <div class="dial__time" role="timer" aria-live="off"><span id="round-seconds">15</span><small>s</small></div>
+          <div class="dial__time" role="timer" aria-live="off"><span id="round-seconds">5</span><small>s</small></div>
         </div>
         <button class="basta" type="button" id="btn-basta">
           <span class="basta__face">BASTA</span>

@@ -39,9 +39,12 @@
     return lista.filter(c => typeof c === 'string' && c.trim()).map(limpiarCat);
   }
 
-  const DURATIONS = [10, 15];
+  const DUR_MIN = 5;      // pedido explícito
+  const DUR_MAX = 120;    // tope de sentido común: dos minutos
   const RING_LENGTH = 2 * Math.PI * 92;   // r=92 en el viewBox del reloj
-  const URGENT_AT = 3;                    // segundos de tensión final
+  // Segundos de tensión final: 3, salvo en rondas cortas donde serían casi
+  // toda la ronda (con 5s pintaría 3 de rojo).
+  const urgentAt = () => Math.min(3, Math.max(1, Math.ceil(state.duration / 3)));
 
   const $ = (id) => document.getElementById(id);
   const el = {
@@ -53,7 +56,7 @@
       fin: $('scene-fin')
     },
     empezar: $('btn-empezar'),
-    chips: [...document.querySelectorAll('#chips-duracion .chip')],
+    durMenos: $('dur-menos'), durMas: $('dur-mas'), durValor: $('dur-valor'),
     sonido: $('btn-sonido'), sonidoEstado: $('sonido-estado'),
     catSelect: $('cat-select'), catDel: $('cat-del'),
     catForm: $('cat-form'), catInput: $('cat-input'),
@@ -73,7 +76,7 @@
 
   const state = {
     phase: 'inicio',
-    duration: 15,
+    duration: DUR_MIN,
     sound: true,
     category: '',
     myCats: [],
@@ -162,7 +165,7 @@
   function loadPrefs() {
     try {
       const d = parseInt(localStorage.getItem('basta:duracion'), 10);
-      if (DURATIONS.includes(d)) state.duration = d;
+      if (Number.isFinite(d) && d >= DUR_MIN && d <= DUR_MAX) state.duration = d;
       state.sound = localStorage.getItem('basta:sonido') !== '0';
       const mias = JSON.parse(localStorage.getItem('basta:misCategorias') || '[]');
       if (Array.isArray(mias)) {
@@ -182,7 +185,9 @@
     } catch (e) {}
   }
   function paintPrefs() {
-    el.chips.forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.dur === state.duration)));
+    el.durValor.textContent = String(state.duration);
+    el.durMenos.disabled = state.duration <= DUR_MIN;
+    el.durMas.disabled = state.duration >= DUR_MAX;
     el.sonido.setAttribute('aria-pressed', String(state.sound));
     el.sonidoEstado.textContent = state.sound ? 'SÍ' : 'NO';
   }
@@ -421,7 +426,7 @@
     el.seconds.textContent = String(Math.ceil(left / 1000));
     el.progress.style.strokeDashoffset =
       (RING_LENGTH * (1 - left / (state.duration * 1000))).toFixed(2);
-    el.dial.classList.toggle('is-urgent', left / 1000 <= URGENT_AT);
+    el.dial.classList.toggle('is-urgent', left / 1000 <= urgentAt());
     el.basta.disabled = false;
     el.basta.classList.remove('is-slammed');
 
@@ -445,7 +450,7 @@
     ringEl.style.strokeDashoffset =
       (RING_LENGTH * (1 - left / (state.duration * 1000))).toFixed(2);
 
-    if (secs <= URGENT_AT) {
+    if (secs <= urgentAt()) {
       hostEl.classList.add('is-urgent');
       if (secs < state.lastBeep) { state.lastBeep = secs; sfx.cuenta(); }
     }
@@ -556,10 +561,27 @@
     wipeTo(toWheel, 'var(--mango)');
   });
 
-  el.chips.forEach(chip => chip.addEventListener('click', () => {
-    state.duration = +chip.dataset.dur;
+  /* Un toque mueve un segundo; mantenerlo apretado repite, porque de 5
+     a 60 serían 55 toques. */
+  function pasoDuracion(delta) {
+    const v = Math.min(DUR_MAX, Math.max(DUR_MIN, state.duration + delta));
+    if (v === state.duration) return;
+    state.duration = v;
     savePrefs(); paintPrefs(); sfx.tick();
-  }));
+  }
+  function conRepeticion(btn, delta) {
+    let espera = 0, repite = 0;
+    const parar = () => { clearTimeout(espera); clearInterval(repite); };
+    btn.addEventListener('pointerdown', () => {
+      parar();
+      espera = setTimeout(() => { repite = setInterval(() => pasoDuracion(delta), 110); }, 450);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach(ev =>
+      btn.addEventListener(ev, parar));
+    btn.addEventListener('click', () => pasoDuracion(delta));   // cubre teclado también
+  }
+  conRepeticion(el.durMenos, -1);
+  conRepeticion(el.durMas, +1);
 
   el.catSelect.addEventListener('change', () => {
     state.category = el.catSelect.value;
