@@ -124,6 +124,8 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
   background:var(--menta); color:var(--felt-900);
   box-shadow:0 9px 0 #14876A, var(--shadow);
   position:relative; overflow:hidden;
+  /* "NUEVA PARTIDA" es más largo que "EMPEZAR": entra en una línea hasta 320px */
+  font-size:clamp(1.15rem,5.4vw,2.2rem);
 }
 .btn:active:not(:disabled){transform:translateY(7px);box-shadow:0 2px 0 var(--mango-deep);}
 .btn--again:active:not(:disabled){box-shadow:0 2px 0 #14876A;}

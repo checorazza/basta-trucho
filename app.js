@@ -36,7 +36,7 @@
     basta: $('btn-basta'),
     endLetterLine: $('end-letter-line'), endLetter: $('end-letter'),
     endNoLetter: $('end-noletter'),
-    nueva: $('btn-nueva'), inicio: $('btn-inicio')
+    nuevaPartida: $('btn-nueva-partida')
   };
 
   const state = {
@@ -386,17 +386,17 @@
     el.endNoLetter.hidden = !!state.letter;
     if (state.letter) el.endLetter.textContent = state.letter;
 
-    el.nueva.disabled = true;
-    el.nueva.classList.remove('is-arming');
+    el.nuevaPartida.disabled = true;
+    el.nuevaPartida.classList.remove('is-arming');
 
     wipeTo(() => {
       show('fin');
-      // Arma NUEVA RONDA con un instante de demora, para que nadie la toque de rebote.
-      void el.nueva.offsetWidth;
-      el.nueva.classList.add('is-arming');
+      // Arma el botón con un instante de demora, para que nadie lo toque de rebote.
+      void el.nuevaPartida.offsetWidth;
+      el.nuevaPartida.classList.add('is-arming');
       later(() => {
-        el.nueva.disabled = false;
-        el.nueva.classList.remove('is-arming');
+        el.nuevaPartida.disabled = false;
+        el.nuevaPartida.classList.remove('is-arming');
       }, 800);
     }, 'var(--mango)');
   }
@@ -440,12 +440,12 @@
   el.salir.addEventListener('click', toHome);
 
   el.basta.addEventListener('click', hitBasta);
-  el.nueva.addEventListener('click', () => {
-    if (el.nueva.disabled) return;
+  // Al agotarse el tiempo se termina la partida: vuelve a la pantalla inicial.
+  el.nuevaPartida.addEventListener('click', () => {
+    if (el.nuevaPartida.disabled) return;
     sfx.tick();
-    wipeTo(toWheel, 'var(--menta)');
+    toHome();
   });
-  el.inicio.addEventListener('click', toHome);
 
   // Teclado: útil cuando la partida se juega en una pantalla compartida.
   window.addEventListener('keydown', (e) => {
