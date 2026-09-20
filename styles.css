@@ -182,11 +182,72 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
 .toggle[aria-pressed="true"] .toggle__knob{transform:translateX(58px);background:var(--menta);}
 .toggle__text{min-width:2ch;}
 
+/* Categorías: lista desplegable (en el celular abre el selector del sistema) */
+.cat-pick{display:flex;gap:8px;}
+.cat-select-wrap{position:relative;flex:1;min-width:0;}
+.cat-select-wrap::after{      /* flecha dibujada en CSS, sin imagen */
+  content:""; position:absolute; right:16px; top:50%;
+  width:9px; height:9px; pointer-events:none;
+  border-right:3px solid var(--felt-900); border-bottom:3px solid var(--felt-900);
+  transform:translateY(-70%) rotate(45deg);
+}
+.cat-select{
+  width:100%; appearance:none; -webkit-appearance:none;
+  padding:13px 40px 13px 15px; border:0; border-radius:14px;
+  background:var(--carton); color:var(--felt-900);
+  font:inherit; font-weight:900; font-size:1rem;
+  text-overflow:ellipsis; cursor:pointer;
+}
+.cat-select:focus-visible{outline:3px solid var(--mango);outline-offset:3px;}
+.cat-del{
+  flex:none; width:50px; border-radius:14px;
+  background:rgba(255,75,87,.18); color:var(--coral);
+  font-size:1rem; font-weight:900;
+  transition:transform .1s var(--ease-pop);
+}
+.cat-del:active{transform:scale(.92);background:rgba(255,75,87,.3);}
+
+.cat-new{display:flex;gap:8px;}
+.cat-new__input{
+  flex:1; min-width:0;                /* sin esto el input desborda el panel */
+  padding:12px 14px; border-radius:14px;
+  border:2px solid var(--line); background:rgba(252,242,223,.07);
+  color:var(--crema); font:inherit; font-weight:700; font-size:.95rem;
+}
+.cat-new__input::placeholder{color:var(--crema-dim);font-weight:500;}
+.cat-new__input:focus{outline:none;border-color:var(--mango);background:rgba(252,242,223,.12);}
+.cat-new__add{
+  flex:none; width:50px; border-radius:14px;
+  background:var(--mango); color:var(--felt-900);
+  font-family:'Chango',Impact,sans-serif; font-size:1.5rem; line-height:1;
+  transition:transform .1s var(--ease-pop);
+}
+.cat-new__add:active{transform:scale(.92);}
+
+/* Tarjeta de categoría, en la rueda y en la ronda */
+.cat-card{
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  max-width:min(92vw,420px); padding:9px 20px 12px;
+  border-radius:16px; background:var(--carton); color:var(--felt-900);
+  box-shadow:0 5px 0 rgba(2,18,17,.45), var(--shadow);
+  transform:rotate(-1.2deg);          /* apoyada en la mesa, no pegada */
+}
+.cat-card__label{
+  font-size:.6rem; font-weight:900; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--mango-deep);
+}
+.cat-card__text{
+  font-family:'Chango',Impact,sans-serif; font-weight:400;
+  font-size:clamp(1rem,4.4vw,1.55rem); line-height:1.12; text-wrap:balance;
+}
+
 /* ── 2. RUEDA DE LETRAS ──────────────────────────────────────── */
+.wheel-head{display:flex;flex-direction:column;align-items:center;gap:10px;}
+/* La tarjeta pasó a ser el titular de la escena, así que el kicker baja de rango. */
 .kicker{
-  margin:0; font-family:'Chango',Impact,sans-serif;
-  font-size:clamp(1.3rem,5.6vw,2rem); color:var(--crema);
-  max-width:18ch; text-wrap:balance; line-height:1.15;
+  margin:0; font-weight:900; letter-spacing:.04em; color:var(--crema-dim);
+  font-size:clamp(.9rem,3.7vw,1.15rem);
+  max-width:24ch; text-wrap:balance; line-height:1.2;
 }
 .wheel{
   /* El anillo crece con la pantalla y siempre deja 17px de margen al borde. */
@@ -277,7 +338,11 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
 .spin:disabled{cursor:default;}
 
 /* ── 3. RONDA ACTIVA ─────────────────────────────────────────── */
-.scene--round{gap:clamp(18px,4vh,40px);}
+.scene--round{gap:clamp(12px,2.6vh,24px);}
+.round-stage{
+  display:flex; flex-direction:column; align-items:center;
+  gap:clamp(18px,4vh,40px);
+}
 .dial{
   --dial:min(72vw, 40vh, 340px);
   position:relative; width:var(--dial); height:var(--dial); flex:none;
@@ -404,16 +469,21 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
 
 /* ── Horizontal / pantalla compartida ────────────────────────── */
 @media (min-width:760px) and (orientation:landscape){
-  .scene--round{flex-direction:row;gap:clamp(30px,5vw,70px);}
-  .dial{--dial:min(38vw, 66vh, 420px);}
-  .basta{width:min(42vw,480px);height:min(46vh,300px);font-size:clamp(3.5rem,7vw,6.5rem);}
+  /* La tarjeta queda arriba; el disco y el BASTA se reparten el ancho. */
+  .round-stage{flex-direction:row;gap:clamp(30px,5vw,70px);}
+  .dial{--dial:min(34vw, 52vh, 420px);}
+  .basta{width:min(42vw,480px);height:min(40vh,300px);font-size:clamp(3.5rem,7vw,6.5rem);}
 }
 /* Celular acostado: el ancho sobra y la altura no, así que la rueda se pone
    entre el título y el botón de salir en vez de apilarse y hacer scroll. */
 @media (orientation:landscape) and (max-height:560px){
   .scene--wheel{flex-direction:row;gap:clamp(10px,3vw,34px);}
   .wheel{--wheel:min(86vh, 52vw, 620px);}
-  .kicker{max-width:9ch;font-size:clamp(1.05rem,3.6vh,1.5rem);}
+  .wheel-head{max-width:22vw;}
+  .cat-card{padding:7px 12px 9px;}
+  .cat-card__text{font-size:clamp(.85rem,2.7vh,1.1rem);}
+  .kicker{max-width:14ch;font-size:clamp(.8rem,2.4vh,1rem);}
+  .link-btn{font-size:.78rem;padding:10px 12px;}
 }
 @media (min-width:900px){
   .tagline{font-size:1.2rem;}

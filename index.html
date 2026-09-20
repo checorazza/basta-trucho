@@ -37,6 +37,22 @@
             <button class="chip" type="button" id="dur-15" data-dur="15">15<small>s</small></button>
           </div>
         </div>
+        <div class="setting">
+          <span class="setting__label" id="lbl-categoria">Categoría</span>
+          <div class="cat-pick">
+            <span class="cat-select-wrap">
+              <select class="cat-select" id="cat-select" aria-labelledby="lbl-categoria"></select>
+            </span>
+            <button class="cat-del" type="button" id="cat-del" hidden
+                    aria-label="Borrar la categoría elegida">✕</button>
+          </div>
+          <form class="cat-new" id="cat-form">
+            <input class="cat-new__input" id="cat-input" type="text" maxlength="24"
+                   placeholder="O escribí la tuya" autocomplete="off" spellcheck="false"
+                   aria-label="Crear categoría propia">
+            <button class="cat-new__add" type="submit" id="cat-add" aria-label="Agregar categoría">+</button>
+          </form>
+        </div>
         <div class="setting setting--row">
           <span class="setting__label" id="lbl-sonido">Sonido</span>
           <button class="toggle" type="button" id="btn-sonido" aria-labelledby="lbl-sonido" aria-pressed="true">
@@ -49,7 +65,13 @@
 
     <!-- ══ 2. PREPARANDO RONDA ══ -->
     <section class="scene scene--wheel" id="scene-preparando" data-scene="preparando" hidden>
-      <p class="kicker" id="kicker-wheel">Elegí una letra</p>
+      <div class="wheel-head">
+        <div class="cat-card">
+          <span class="cat-card__label">Categoría</span>
+          <strong class="cat-card__text" id="cat-wheel"></strong>
+        </div>
+        <p class="kicker" id="kicker-wheel">Elegí una letra</p>
+      </div>
       <div class="wheel" id="wheel">
         <div class="wheel__disc" aria-hidden="true"></div>
         <svg class="wheel__clock" viewBox="0 0 200 200" aria-hidden="true">
@@ -68,17 +90,23 @@
 
     <!-- ══ 3. RONDA ACTIVA ══ -->
     <section class="scene scene--round" id="scene-activa" data-scene="activa" hidden>
-      <div class="dial" id="dial">
-        <svg class="dial__ring" viewBox="0 0 200 200" aria-hidden="true">
-          <circle class="dial__track" cx="100" cy="100" r="92"></circle>
-          <circle class="dial__progress" id="dial-progress" cx="100" cy="100" r="92"></circle>
-        </svg>
-        <div class="dial__letter" id="round-letter">A</div>
-        <div class="dial__time" role="timer" aria-live="off"><span id="round-seconds">15</span><small>s</small></div>
+      <div class="cat-card">
+        <span class="cat-card__label">Categoría</span>
+        <strong class="cat-card__text" id="cat-round"></strong>
       </div>
-      <button class="basta" type="button" id="btn-basta">
-        <span class="basta__face">BASTA</span>
-      </button>
+      <div class="round-stage">
+        <div class="dial" id="dial">
+          <svg class="dial__ring" viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="dial__track" cx="100" cy="100" r="92"></circle>
+            <circle class="dial__progress" id="dial-progress" cx="100" cy="100" r="92"></circle>
+          </svg>
+          <div class="dial__letter" id="round-letter">A</div>
+          <div class="dial__time" role="timer" aria-live="off"><span id="round-seconds">15</span><small>s</small></div>
+        </div>
+        <button class="basta" type="button" id="btn-basta">
+          <span class="basta__face">BASTA</span>
+        </button>
+      </div>
     </section>
 
     <!-- ══ 4. ¡TIEMPO! — sólo cuando se agota el reloj ══ -->

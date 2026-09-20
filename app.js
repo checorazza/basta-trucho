@@ -12,6 +12,33 @@
   const ALL = ['A','B','C','D','E','F','G','H','I','J','L',
                'M','N','O','P','Q','R','S','T','U','V'];
 
+  /* ── Categorías ──────────────────────────────────────────────
+     Las de fábrica viven en categorias.json, que es el único lugar
+     donde se editan. Se suman las que escriba la gente en el inicio. */
+  let PRESET_CATS = [];
+  const CAT_MAX = 24;
+
+  /* Al publicar, el JSON se inyecta dentro de la página: así la versión
+     online no depende de fetch, que el CSP puede bloquear. Servida por
+     HTTP se lee el archivo; con file:// no hay forma y se juega sin
+     categorías, sin inventar una lista paralela que se desincronice. */
+  async function cargarCategorias() {
+    const inline = document.getElementById('categorias-json');
+    if (inline) {
+      try { return leerCats(JSON.parse(inline.textContent)); } catch (e) {}
+    }
+    try {
+      const r = await fetch('categorias.json');
+      if (r.ok) return leerCats(await r.json());
+    } catch (e) {}
+    console.warn('No se pudo leer categorias.json: serví la app por HTTP, no con file://');
+    return [];
+  }
+  function leerCats(data) {
+    const lista = data && Array.isArray(data.categorias) ? data.categorias : [];
+    return lista.filter(c => typeof c === 'string' && c.trim()).map(limpiarCat);
+  }
+
   const DURATIONS = [10, 15];
   const RING_LENGTH = 2 * Math.PI * 92;   // r=92 en el viewBox del reloj
   const URGENT_AT = 3;                    // segundos de tensión final
@@ -28,6 +55,9 @@
     empezar: $('btn-empezar'),
     chips: [...document.querySelectorAll('#chips-duracion .chip')],
     sonido: $('btn-sonido'), sonidoEstado: $('sonido-estado'),
+    catSelect: $('cat-select'), catDel: $('cat-del'),
+    catForm: $('cat-form'), catInput: $('cat-input'),
+    catWheel: $('cat-wheel'), catRound: $('cat-round'),
     wheel: $('wheel'), wheelLetters: $('wheel-letters'), azar: $('btn-azar'),
     wheelProgress: $('wheel-progress'), wheelSeconds: $('wheel-seconds'),
     kickerWheel: $('kicker-wheel'), salir: $('btn-salir'),
@@ -43,6 +73,8 @@
     phase: 'inicio',
     duration: 15,
     sound: true,
+    category: '',
+    myCats: [],
     letter: null,
     used: new Set(),
     endsAt: 0,
@@ -128,18 +160,85 @@
       const d = parseInt(localStorage.getItem('basta:duracion'), 10);
       if (DURATIONS.includes(d)) state.duration = d;
       state.sound = localStorage.getItem('basta:sonido') !== '0';
-    } catch (e) { /* modo privado: valores por defecto */ }
+      const mias = JSON.parse(localStorage.getItem('basta:misCategorias') || '[]');
+      if (Array.isArray(mias)) {
+        state.myCats = mias.filter(c => typeof c === 'string' && c.trim())
+                           .map(c => limpiarCat(c)).slice(0, 12);
+      }
+      // Se valida en resolverCategoria(), cuando ya está cargado el JSON.
+      state.category = localStorage.getItem('basta:categoria') || '';
+    } catch (e) { /* modo privado o dato roto: valores por defecto */ }
   }
   function savePrefs() {
     try {
       localStorage.setItem('basta:duracion', String(state.duration));
       localStorage.setItem('basta:sonido', state.sound ? '1' : '0');
+      localStorage.setItem('basta:categoria', state.category);
+      localStorage.setItem('basta:misCategorias', JSON.stringify(state.myCats));
     } catch (e) {}
   }
   function paintPrefs() {
     el.chips.forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.dur === state.duration)));
     el.sonido.setAttribute('aria-pressed', String(state.sound));
     el.sonidoEstado.textContent = state.sound ? 'SÍ' : 'NO';
+  }
+
+  /* ── Categorías ──────────────────────────────────────────────── */
+  const limpiarCat = (s) => s.replace(/\s+/g, ' ').trim().slice(0, CAT_MAX);
+  const todasLasCats = () => PRESET_CATS.concat(state.myCats);
+
+  const esPropia = (cat) => !!cat && !PRESET_CATS.includes(cat);
+  const hayCats = () => todasLasCats().length > 0;
+
+  // La guardada puede no existir más (la borraron o cambió el JSON).
+  function resolverCategoria() {
+    const todas = todasLasCats();
+    if (!todas.includes(state.category)) state.category = todas[0] || '';
+  }
+
+  function renderCats() {
+    el.catSelect.textContent = '';
+    const opcion = (cat) => {
+      const o = document.createElement('option');
+      o.value = cat;
+      o.textContent = cat;                        // textContent: nunca innerHTML
+      return o;
+    };
+    if (PRESET_CATS.length && state.myCats.length) {
+      // Con categorías propias conviene separarlas de las de fábrica.
+      const g1 = document.createElement('optgroup'); g1.label = 'De fábrica';
+      PRESET_CATS.forEach(c => g1.appendChild(opcion(c)));
+      const g2 = document.createElement('optgroup'); g2.label = 'Mías';
+      state.myCats.forEach(c => g2.appendChild(opcion(c)));
+      el.catSelect.append(g1, g2);
+    } else {
+      todasLasCats().forEach(c => el.catSelect.appendChild(opcion(c)));
+    }
+    el.catSelect.value = state.category;
+    el.catDel.hidden = !esPropia(state.category);
+    el.catSelect.disabled = !hayCats();
+  }
+
+  /* Sin categorías (sólo pasa si no se pudo leer el JSON) se esconden
+     las tarjetas y el juego sigue andando con la letra y el reloj. */
+  function paintCategory() {
+    el.catWheel.textContent = state.category;
+    el.catRound.textContent = state.category;
+    document.querySelectorAll('.cat-card').forEach(c => { c.hidden = !state.category; });
+  }
+
+  function addCat(texto) {
+    const cat = limpiarCat(texto);
+    if (!cat) return false;
+    const yaEsta = todasLasCats().find(c => c.toLowerCase() === cat.toLowerCase());
+    if (yaEsta) { state.category = yaEsta; }      // repetida: la elige y listo
+    else {
+      if (state.myCats.length >= 12) state.myCats.shift();
+      state.myCats.push(cat);
+      state.category = cat;
+    }
+    savePrefs(); renderCats(); paintCategory();
+    return true;
   }
 
   /* ── Escenas y cortina ───────────────────────────────────────── */
@@ -426,6 +525,29 @@
     savePrefs(); paintPrefs(); sfx.tick();
   }));
 
+  el.catSelect.addEventListener('change', () => {
+    state.category = el.catSelect.value;
+    savePrefs(); paintCategory(); sfx.tick();
+    el.catDel.hidden = !esPropia(state.category);
+  });
+
+  el.catDel.addEventListener('click', () => {
+    const cat = state.category;
+    if (!esPropia(cat)) return;
+    state.myCats = state.myCats.filter(c => c !== cat);
+    resolverCategoria();
+    savePrefs(); renderCats(); paintCategory(); sfx.tick();
+  });
+
+  el.catForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (addCat(el.catInput.value)) {
+      el.catInput.value = '';
+      el.catInput.blur();                 // baja el teclado del celular
+      sfx.elegir();
+    }
+  });
+
   el.sonido.addEventListener('click', () => {
     state.sound = !state.sound;
     savePrefs(); paintPrefs();
@@ -468,4 +590,10 @@
   paintPrefs();
   buildWheel();
   show('inicio');
+  cargarCategorias().then(cats => {
+    PRESET_CATS = cats;
+    resolverCategoria();
+    renderCats();
+    paintCategory();
+  });
 })();
