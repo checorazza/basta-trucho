@@ -17,6 +17,14 @@
   <div class="grain" aria-hidden="true"></div>
   <div class="wipe" id="wipe" aria-hidden="true"><span class="wipe__word" id="wipe-word"></span></div>
 
+  <!-- Pausa: tapa y oscurece la partida hasta que toquen SEGUIR -->
+  <div class="pausa" id="pausa" role="dialog" aria-modal="true" aria-labelledby="pausa-titulo" hidden>
+    <span class="pausa-icon pausa-icon--grande" aria-hidden="true"><span></span><span></span></span>
+    <p class="pausa__titulo" id="pausa-titulo">EN PAUSA</p>
+    <p class="pausa__reloj">El reloj quedó en <strong id="pausa-seconds">15</strong>s</p>
+    <button class="btn btn--seguir" type="button" id="btn-seguir">SEGUIR</button>
+  </div>
+
   <main class="app" id="app">
 
     <!-- ══ 1. INICIO ══ -->
@@ -66,9 +74,14 @@
     <!-- ══ 2. PREPARANDO RONDA ══ -->
     <section class="scene scene--wheel" id="scene-preparando" data-scene="preparando" hidden>
       <div class="wheel-head">
-        <div class="cat-card">
-          <span class="cat-card__label">Categoría</span>
-          <strong class="cat-card__text" id="cat-wheel"></strong>
+        <div class="top-row">
+          <div class="cat-card">
+            <span class="cat-card__label">Categoría</span>
+            <strong class="cat-card__text" id="cat-wheel"></strong>
+          </div>
+          <button class="pausa-btn" type="button" aria-label="Pausar el reloj" hidden>
+            <span class="pausa-icon" aria-hidden="true"><span></span><span></span></span>
+          </button>
         </div>
         <p class="kicker" id="kicker-wheel">Elegí una letra</p>
       </div>
@@ -90,9 +103,14 @@
 
     <!-- ══ 3. RONDA ACTIVA ══ -->
     <section class="scene scene--round" id="scene-activa" data-scene="activa" hidden>
-      <div class="cat-card">
-        <span class="cat-card__label">Categoría</span>
-        <strong class="cat-card__text" id="cat-round"></strong>
+      <div class="top-row">
+        <div class="cat-card">
+          <span class="cat-card__label">Categoría</span>
+          <strong class="cat-card__text" id="cat-round"></strong>
+        </div>
+        <button class="pausa-btn" type="button" aria-label="Pausar el reloj" hidden>
+          <span class="pausa-icon" aria-hidden="true"><span></span><span></span></span>
+        </button>
       </div>
       <div class="round-stage">
         <div class="dial" id="dial">

@@ -242,6 +242,25 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
 }
 
 /* ── 2. RUEDA DE LETRAS ──────────────────────────────────────── */
+/* Fila superior: tarjeta de categoría y botón de pausa, uno al lado del otro.
+   Fijo en una esquina se superponía con la tarjeta en pantallas chicas. */
+.top-row{display:flex;align-items:center;justify-content:center;gap:10px;max-width:100%;}
+.top-row .cat-card{flex:0 1 auto;min-width:0;}
+
+.pausa-icon{display:flex;gap:4px;}
+.pausa-icon span{width:5px;height:17px;border-radius:2px;background:currentColor;}
+.pausa-icon--grande{gap:15px;color:var(--mango);}
+.pausa-icon--grande span{width:27px;height:86px;border-radius:8px;}
+
+.pausa-btn{
+  flex:none; width:46px; height:46px; border-radius:50%;
+  display:grid; place-items:center;
+  background:rgba(252,242,223,.1); color:var(--crema);
+  border:1px solid var(--line);
+  transition:transform .1s var(--ease-pop), background .15s;
+}
+.pausa-btn:active{transform:scale(.9);background:rgba(252,242,223,.2);}
+
 .wheel-head{display:flex;flex-direction:column;align-items:center;gap:10px;}
 /* La tarjeta pasó a ser el titular de la escena, así que el kicker baja de rango. */
 .kicker{
@@ -252,11 +271,11 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
 .wheel{
   /* El anillo crece con la pantalla y siempre deja 17px de margen al borde. */
   --wheel:min(100vw - 34px, 62vh, 620px);
-  /* 21 fichas separadas: con d = .105·W el hueco entre vecinas es
-     .149042·W − 1.149042·d = .0284·W, o sea un 27% del diámetro de la ficha.
+  /* 20 fichas separadas: con d = .1097·W el hueco entre vecinas es
+     .156434·W − 1.156434·d = .0296·W, o sea un 27% del diámetro de la ficha.
      El hueco es zona muerta: un toque ahí no elige nada en vez de elegir mal. */
-  --btn:calc(var(--wheel) * .105);
-  --rf:.4475;
+  --btn:calc(var(--wheel) * .1097);
+  --rf:.44515;
   position:relative; width:var(--wheel); height:var(--wheel); flex:none;
   animation:wheelIn .5s var(--ease-pop) both;
 }
@@ -430,6 +449,31 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
   box-shadow:0 3px 0 rgba(2,18,17,.5);
 }
 .end__hint{margin:0;max-width:26ch;font-size:.95rem;color:var(--crema-dim);text-wrap:balance;}
+
+/* ── Pausa ───────────────────────────────────────────────────── */
+.pausa{
+  position:fixed; inset:0; z-index:40;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:clamp(14px,3vh,26px); padding:clamp(20px,4vh,40px) 16px; text-align:center;
+  background:rgba(4,37,35,.88);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  animation:pausaIn .2s ease-out both;
+}
+@keyframes pausaIn{from{opacity:0}to{opacity:1}}
+.pausa__titulo{
+  margin:0; font-family:'Chango',Impact,'Arial Black',sans-serif;
+  font-size:clamp(2.2rem,11vw,4rem); line-height:1; color:var(--crema);
+  text-shadow:0 5px 0 rgba(2,18,17,.5);
+}
+.pausa__reloj{margin:0;font-size:1rem;font-weight:700;color:var(--crema-dim);}
+.pausa__reloj strong{
+  color:var(--menta); font-size:1.5rem; font-variant-numeric:tabular-nums;
+}
+.btn--seguir{
+  background:var(--menta); color:var(--felt-900);
+  box-shadow:0 9px 0 #14876A, var(--shadow);
+}
+.btn--seguir:active{box-shadow:0 2px 0 #14876A;}
 
 /* ── Cortina entre estados ───────────────────────────────────── */
 .wipe{

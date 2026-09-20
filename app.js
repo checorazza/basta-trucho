@@ -8,9 +8,9 @@
 
   /* ── Letras ──────────────────────────────────────────────────
      Un solo anillo, en orden alfabético y pegadas entre sí.
-     Sin K, Ñ, W, X, Y ni Z: en una mesa no dan juego. */
-  const ALL = ['A','B','C','D','E','F','G','H','I','J','L',
-               'M','N','O','P','Q','R','S','T','U','V'];
+     Sin K, Ñ, Q, W, X, Y ni Z: en una mesa no dan juego. */
+  const ALL = ['A','B','C','D','E','F','G','H','I','J',
+               'L','M','N','O','P','R','S','T','U','V'];
 
   /* ── Categorías ──────────────────────────────────────────────
      Las de fábrica viven en categorias.json, que es el único lugar
@@ -64,6 +64,8 @@
     dial: $('dial'), progress: $('dial-progress'),
     roundLetter: $('round-letter'), seconds: $('round-seconds'),
     basta: $('btn-basta'),
+    pausa: $('pausa'), pausaSeconds: $('pausa-seconds'), seguir: $('btn-seguir'),
+    pausaBtns: [...document.querySelectorAll('.pausa-btn')],
     endLetterLine: $('end-letter-line'), endLetter: $('end-letter'),
     endNoLetter: $('end-noletter'),
     nuevaPartida: $('btn-nueva-partida')
@@ -78,6 +80,8 @@
     letter: null,
     used: new Set(),
     endsAt: 0,
+    paused: false,
+    leftMs: 0,        // lo que quedaba del reloj al pausar
     raf: 0,
     endTimer: 0,      // respaldo del corte, vive a través del cambio de escena
     lastBeep: 0,
@@ -250,6 +254,7 @@
     node.querySelectorAll('.wheel, .dial, .end__title').forEach(n => {
       n.style.animation = 'none'; void n.offsetWidth; n.style.animation = '';
     });
+    pintarPausa();
   }
   /* Con `word`, la cortina se queda un momento y canta la palabra:
      así BASTA se ve claro sin una pantalla intermedia que frene el juego. */
@@ -305,8 +310,7 @@
      No se reinicia al elegir; la ronda sigue con lo que quedó. */
   function toWheel() {
     clearTimers();
-    clearTimeout(state.endTimer);
-    cancelAnimationFrame(state.raf);
+    stopClock();
     if (state.used.size >= ALL.length) state.used.clear();
     state.letter = null;
     paintWheel();
@@ -326,14 +330,18 @@
     keepAwake();
   }
 
-  function startClock() {
-    state.endsAt = performance.now() + state.duration * 1000;
-    state.lastBeep = state.duration + 1;
+  /* Sin argumento arranca de cero; con `restante` retoma una pausa. */
+  function startClock(restante) {
+    const ms = restante == null ? state.duration * 1000 : restante;
+    if (restante == null) state.lastBeep = state.duration + 1;
+    state.endsAt = performance.now() + ms;
     // rAF dibuja la cuenta; el setTimeout garantiza el corte aunque el
     // navegador congele los frames con la pestaña en segundo plano.
+    clearTimeout(state.endTimer);
     state.endTimer = setTimeout(() => {
       if (state.phase === 'preparando' || state.phase === 'activa') endRound();
-    }, state.duration * 1000 + 40);
+    }, ms + 40);
+    cancelAnimationFrame(state.raf);
     state.raf = requestAnimationFrame(tickClock);
   }
 
@@ -449,6 +457,35 @@
     state.raf = 0;
     clearTimeout(state.endTimer);
     state.endTimer = 0;
+    state.paused = false;
+    pintarPausa();
+  }
+
+  /* ── Pausa ───────────────────────────────────────────────────── */
+  function pintarPausa() {
+    const enJuego = state.phase === 'preparando' || state.phase === 'activa';
+    el.pausaBtns.forEach(b => { b.hidden = !enJuego || state.paused; });
+    el.pausa.hidden = !state.paused;
+  }
+
+  function pausar() {
+    if (state.paused) return;
+    if (state.phase !== 'preparando' && state.phase !== 'activa') return;
+    state.paused = true;
+    state.leftMs = Math.max(0, state.endsAt - performance.now());
+    cancelAnimationFrame(state.raf); state.raf = 0;
+    clearTimeout(state.endTimer);   state.endTimer = 0;
+    el.pausaSeconds.textContent = String(Math.ceil(state.leftMs / 1000));
+    pintarPausa();
+    sfx.tick();
+  }
+
+  function seguir() {
+    if (!state.paused) return;
+    state.paused = false;
+    pintarPausa();
+    sfx.elegir();
+    startClock(state.leftMs);
   }
 
   /* BASTA corta la ronda y vuelve derecho a la rueda: no hay pantalla de fin,
@@ -503,8 +540,7 @@
   /* ── Salidas ─────────────────────────────────────────────────── */
   function toHome() {
     clearTimers();
-    clearTimeout(state.endTimer);
-    cancelAnimationFrame(state.raf);
+    stopClock();
     releaseAwake();
     state.used.clear();
     state.letter = null;
@@ -562,6 +598,8 @@
   el.salir.addEventListener('click', toHome);
 
   el.basta.addEventListener('click', hitBasta);
+  el.pausaBtns.forEach(b => b.addEventListener('click', pausar));
+  el.seguir.addEventListener('click', seguir);
   // Al agotarse el tiempo se termina la partida: vuelve a la pantalla inicial.
   el.nuevaPartida.addEventListener('click', () => {
     if (el.nuevaPartida.disabled) return;
@@ -572,6 +610,10 @@
   // Teclado: útil cuando la partida se juega en una pantalla compartida.
   window.addEventListener('keydown', (e) => {
     if (e.repeat) return;
+    if (state.paused) {
+      if (e.code === 'Space' || e.code === 'Enter' || e.key === 'Escape') { e.preventDefault(); seguir(); }
+      return;
+    }
     if (state.phase === 'activa' && (e.code === 'Space' || e.code === 'Enter' || e.key === 'b' || e.key === 'B')) {
       e.preventDefault(); hitBasta();
     } else if (state.phase === 'preparando' && e.key === 'Escape') {
