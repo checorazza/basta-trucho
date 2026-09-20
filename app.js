@@ -263,17 +263,20 @@
   }
   /* Con `word`, la cortina se queda un momento y canta la palabra:
      así BASTA se ve claro sin una pantalla intermedia que frene el juego. */
-  function wipeTo(fn, color, word) {
+  function wipeTo(fn, color, word, fast) {
     if (reduced()) { fn(); return; }
     const hold = !!word;
     el.wipeWord.textContent = word || '';
     el.wipe.style.setProperty('--wipe-color', color);
-    el.wipe.classList.remove('is-active', 'wipe--hold');
+    el.wipe.classList.remove('is-active', 'wipe--hold', 'wipe--fast');
     void el.wipe.offsetWidth;
     if (hold) el.wipe.classList.add('wipe--hold');
+    else if (fast) el.wipe.classList.add('wipe--fast');
     el.wipe.classList.add('is-active');
-    later(fn, hold ? 430 : 280);
-    later(() => el.wipe.classList.remove('is-active', 'wipe--hold'), hold ? 1180 : 700);
+    // El cambio de escena va cuando la cortina tapa: 42% de la animación.
+    later(fn, hold ? 430 : (fast ? 180 : 280));
+    later(() => el.wipe.classList.remove('is-active', 'wipe--hold', 'wipe--fast'),
+          hold ? 1180 : (fast ? 480 : 700));
   }
 
   /* ── La rueda ────────────────────────────────────────────────── */
@@ -365,7 +368,7 @@
     commitLetter(L);
     sfx.elegir();
     buzz(20);
-    later(() => beginRound(L), reduced() ? 60 : 520);
+    later(() => beginRound(L), reduced() ? 60 : 170);
   }
 
   function spin() {
@@ -430,7 +433,7 @@
     el.basta.disabled = false;
     el.basta.classList.remove('is-slammed');
 
-    wipeTo(() => show('activa'), 'var(--menta)');
+    wipeTo(() => show('activa'), 'var(--menta)', null, true);
   }
 
   function tickClock(now) {

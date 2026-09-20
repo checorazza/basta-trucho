@@ -325,7 +325,10 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
   position:absolute; left:50%; top:50%;
   width:var(--btn); height:var(--btn); border-radius:50%;
   display:grid; place-items:center;
-  font-family:'Chango',Impact,sans-serif; font-size:calc(var(--btn) * .56);
+  /* Archivo 900 en vez de Chango: a 23px las formas de afiche se empastan.
+     Chango queda para la letra grande de la ronda, donde sí se lee. */
+  font-family:'Archivo','Helvetica Neue',Arial,sans-serif;
+  font-weight:900; font-size:calc(var(--btn) * .62);
   color:var(--felt-900); background:var(--carton);
   box-shadow:0 3px 0 rgba(2,18,17,.5);
   /* la escala va al final: crece sobre su propio centro, no se aleja del eje */
@@ -340,8 +343,9 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
 .letter:active{background:var(--mango);}
 .letter.is-used{background:rgba(252,242,223,.16);color:var(--crema-dim);box-shadow:none;}
 .letter.is-flash{--s:1.22;background:var(--mango);color:var(--felt-900);}
-.letter.is-picked{--s:1.3;background:var(--coral);color:var(--crema);animation:pick .4s steps(2) 3;}
-@keyframes pick{0%,100%{filter:none}50%{filter:brightness(1.6)}}
+/* Sin parpadeo: el salto de escala ya confirma cuál se tocó, y la ronda
+   entra enseguida mostrando la letra en grande. */
+.letter.is-picked{--s:1.32;background:var(--coral);color:var(--crema);}
 
 .spin{
   position:absolute; left:50%; top:50%;
@@ -489,6 +493,8 @@ button:focus-visible{outline:3px solid var(--mango);outline-offset:4px;border-ra
   border-radius:44% 44% 0 0;
 }
 .wipe.is-active{animation:wipe .62s var(--ease-snap) forwards;}
+/* Entrada a la ronda: misma cortina, más corta. */
+.wipe.is-active.wipe--fast{animation:wipe .42s var(--ease-snap) forwards;}
 @keyframes wipe{
   0%{transform:translateY(101%);border-radius:44% 44% 0 0;}
   42%{transform:translateY(0);border-radius:0;}
