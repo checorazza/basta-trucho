@@ -16,7 +16,7 @@
      Las de fábrica viven en categorias.json, que es el único lugar
      donde se editan. Se suman las que escriba la gente en el inicio. */
   let PRESET_CATS = [];
-  const CAT_MAX = 24;
+  const CAT_MAX = 40;
 
   /* Al publicar, el JSON se inyecta dentro de la página: así la versión
      online no depende de fetch, que el CSP puede bloquear. Servida por
@@ -82,7 +82,8 @@
     used: new Set(),
     endsAt: 0,
     paused: false,
-    leftMs: 0,        // lo que quedaba del reloj al pausar
+    frozen: false,    // congelado por la ruleta, sin overlay
+    leftMs: 0,        // lo que quedaba del reloj al pausar o congelar
     raf: 0,
     endTimer: 0,      // respaldo del corte, vive a través del cambio de escena
     lastBeep: 0,
@@ -372,17 +373,19 @@
   function spin() {
     if (state.phase !== 'preparando') return;
     lockWheel(true);
+    congelarReloj();
     const pool = ALL.filter(L => !state.used.has(L));
     const target = pool[Math.floor(Math.random() * pool.length)];
     if (reduced()) { tiles.get(target).classList.add('is-picked'); commitLetter(target);
       sfx.elegir(); later(() => beginRound(target), 300); return; }
 
     // La ruleta recorre el anillo frenando y aterriza justo en la letra sorteada.
-    // Corta ahora que el reloj ya corre: no puede costar 2 segundos de ronda.
-    const steps = 14;
+    // Con el reloj congelado no cuesta ronda, así que da casi dos vueltas
+    // y frena largo: 38 pasos sobre un anillo de 20.
+    const steps = 38;
     const target_i = ALL.indexOf(target);
     const from = ((target_i - (steps - 1)) % ALL.length + ALL.length) % ALL.length;
-    let delay = 20, acc = 0, prev = null;
+    let delay = 22, acc = 0, prev = null;
     for (let i = 0; i < steps; i++) {
       const node = tiles.get(ALL[(from + i) % ALL.length]);
       const last = prev;
@@ -393,7 +396,7 @@
       }, acc);
       prev = node;
       acc += delay;
-      delay *= 1.16;
+      delay *= 1.072;
     }
     later(() => {
       if (prev) prev.classList.remove('is-flash');
@@ -402,7 +405,7 @@
       sfx.elegir();
       buzz(30);
     }, acc);
-    later(() => beginRound(target), acc + 300);
+    later(() => beginRound(target), acc + 520);
   }
 
   /* ── Ronda activa ────────────────────────────────────────────── */
@@ -422,7 +425,9 @@
     state.letter = L;
     state.used.add(L);
 
-    const left = Math.max(0, state.endsAt - performance.now());
+    // Congelado por la ruleta, endsAt quedó en el pasado: vale lo guardado.
+    const left = state.frozen ? state.leftMs
+                              : Math.max(0, state.endsAt - performance.now());
     el.roundLetter.textContent = L;
     el.seconds.textContent = String(Math.ceil(left / 1000));
     el.progress.style.strokeDashoffset =
@@ -431,7 +436,7 @@
     el.basta.disabled = false;
     el.basta.classList.remove('is-slammed');
 
-    wipeTo(() => show('activa'), 'var(--papel)', null, true);
+    wipeTo(() => { show('activa'); descongelarReloj(); }, 'var(--papel)', null, true);
   }
 
   function tickClock(now) {
@@ -464,18 +469,37 @@
     clearTimeout(state.endTimer);
     state.endTimer = 0;
     state.paused = false;
+    state.frozen = false;
     pintarPausa();
   }
 
   /* ── Pausa ───────────────────────────────────────────────────── */
   function pintarPausa() {
     const enJuego = state.phase === 'preparando' || state.phase === 'activa';
-    el.pausaBtns.forEach(b => { b.hidden = !enJuego || state.paused; });
+    el.pausaBtns.forEach(b => { b.hidden = !enJuego || state.paused || state.frozen; });
     el.pausa.hidden = !state.paused;
   }
 
+  /* La ruleta no debe comerse la ronda: el reloj se congela mientras gira
+     y vuelve a correr cuando aparece la pantalla con la letra. Sin overlay,
+     es una pausa interna. */
+  function congelarReloj() {
+    if (state.frozen) return;
+    state.frozen = true;
+    state.leftMs = Math.max(0, state.endsAt - performance.now());
+    cancelAnimationFrame(state.raf); state.raf = 0;
+    clearTimeout(state.endTimer);   state.endTimer = 0;
+    pintarPausa();
+  }
+  function descongelarReloj() {
+    if (!state.frozen) return;
+    state.frozen = false;
+    startClock(state.leftMs);
+    pintarPausa();
+  }
+
   function pausar() {
-    if (state.paused) return;
+    if (state.paused || state.frozen) return;
     if (state.phase !== 'preparando' && state.phase !== 'activa') return;
     state.paused = true;
     state.leftMs = Math.max(0, state.endsAt - performance.now());

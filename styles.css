@@ -13,6 +13,7 @@
   --papel:#F7F3F2;
   --papel-deep:#B3A7A8;      /* sombra dura bajo superficies blancas */
   --papel-dim:#968A8B;       /* neutro con el mismo sesgo rojo */
+  --sunray-beam: #201b1b;
   /* Rojo */
   --rojo:#E4232B;
   --rojo-deep:#98111A;
@@ -238,7 +239,7 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
 /* Tarjeta de categoría, en la rueda y en la ronda */
 .cat-card{
   display:flex; flex-direction:column; align-items:center; gap:3px;
-  max-width:min(92vw,420px); padding:9px 20px 12px;
+  max-width:min(88vw,420px); padding:9px 18px 12px;
   border-radius:16px; background:var(--papel); color:var(--ink-900);
   box-shadow:0 5px 0 rgba(0,0,0,.55), var(--shadow);
   transform:rotate(-1.2deg);          /* apoyada en la mesa, no pegada */
@@ -248,14 +249,19 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
   color:var(--rojo);
 }
 .cat-card__text{
-  font-family:'Chango',Impact,sans-serif; font-weight:400;
-  font-size:clamp(1rem,4.4vw,1.55rem); line-height:1.12; text-wrap:balance;
+  /* Archivo, no Chango: es texto para leer, no un rótulo de afiche */
+  font-family:'Archivo','Helvetica Neue',Arial,sans-serif;
+  font-weight:900; font-size:clamp(1.05rem,4.6vw,1.6rem);
+  line-height:1.15; text-wrap:balance; letter-spacing:-.01em;
 }
 
 /* ── 2. RUEDA DE LETRAS ──────────────────────────────────────── */
-/* Fila superior: tarjeta de categoría y botón de pausa, uno al lado del otro.
+/* Encabezado: el botón de pausa arriba y la tarjeta de categoría debajo.
    Fijo en una esquina se superponía con la tarjeta en pantallas chicas. */
-.top-row{display:flex;align-items:center;justify-content:center;gap:10px;max-width:100%;}
+.top-row{
+  display:flex; flex-direction:column; align-items:center;
+  gap:10px; max-width:100%;
+}
 .top-row .cat-card{flex:0 1 auto;min-width:0;}
 
 .pausa-icon{display:flex;gap:4px;}
@@ -318,7 +324,8 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
   transition:stroke .3s;
 }
 .wheel.is-urgent .wheel__clock-fill{stroke:var(--rojo);}
-.wheel.is-urgent .spin__time{color:var(--rojo);}
+/* Negro, no rojo: el botón AZAR ya es rojo y el número desaparecía. */
+.wheel.is-urgent .spin__time{color:var(--ink-900);}
 .wheel.is-urgent .spin__big{animation:beatFlat .95s ease-in-out infinite;}
 @keyframes beatFlat{0%,100%{transform:scale(1)}35%{transform:scale(1.08)}}
 
@@ -346,10 +353,16 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
 }
 .letter:active{background:var(--rojo);color:var(--papel);}
 .letter.is-used{background:var(--papel-16);color:var(--papel-dim);box-shadow:none;}
-.letter.is-flash{--s:1.22;background:var(--ink-900);color:var(--papel);}
-/* Sin parpadeo: el salto de escala ya confirma cuál se tocó, y la ronda
-   entra enseguida mostrando la letra en grande. */
-.letter.is-picked{--s:1.32;background:var(--rojo);color:var(--papel);}
+/* Sin transición al entrar: los pasos del barrido duran menos que los 120ms
+   de la transición y el rojo quedaba a medio camino, rosado. Al salir sí
+   transiciona, y deja una estela de fichas volviendo al blanco. */
+.letter.is-flash{--s:1.22;background:var(--rojo);color:var(--papel);transition:none;}
+/* La elegida también es roja, así que se distingue del barrido por el aro
+   blanco y el salto de escala, no por el color. */
+.letter.is-picked{
+  --s:1.36; background:var(--rojo); color:var(--papel);
+  box-shadow:0 0 0 4px var(--papel), 0 3px 0 rgba(0,0,0,.55);
+}
 
 .spin{
   position:absolute; left:50%; top:50%;
@@ -392,7 +405,10 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
 }
 .dial__letter{
   position:absolute; inset:0; display:grid; place-items:center;
-  font-family:'Chango',Impact,sans-serif; font-size:calc(var(--dial) * .54);
+  /* Archivo, igual que las fichas: la letra de la ronda y la de la rueda
+     tienen que leerse como la misma letra. */
+  font-family:'Archivo','Helvetica Neue',Arial,sans-serif;
+  font-weight:900; font-size:calc(var(--dial) * .62);
   line-height:1; color:var(--papel);
   text-shadow:0 6px 0 var(--rojo-deep);
   transform:translateY(calc(var(--dial) * -.04));
@@ -432,8 +448,8 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
 /* ── 4 y 5. FIN DE RONDA ─────────────────────────────────────── */
 .burst{
   position:absolute; left:50%; top:50%; width:170vmax; height:170vmax;
-  transform:translate(-50%,-50%); pointer-events:none; opacity:.2;
-  background:repeating-conic-gradient(from 0deg, var(--rojo) 0deg 7deg, transparent 7deg 14deg);
+  transform:translate(-50%,-50%); pointer-events:none; opacity:.34;
+  background:repeating-conic-gradient(from 0deg, var(--sunray-beam) 0deg 7deg, transparent 7deg 14deg);
   animation:turn 34s linear infinite;
   mask-image:radial-gradient(circle,#000 18%,transparent 62%);
   -webkit-mask-image:radial-gradient(circle,#000 18%,transparent 62%);

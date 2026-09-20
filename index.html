@@ -56,7 +56,7 @@
               aria-label="Borrar la categoría elegida">✕</button>
           </div>
           <form class="cat-new" id="cat-form">
-            <input class="cat-new__input" id="cat-input" type="text" maxlength="24" placeholder="O escribí la tuya"
+            <input class="cat-new__input" id="cat-input" type="text" maxlength="40" placeholder="O escribí la tuya"
               autocomplete="off" spellcheck="false" aria-label="Crear categoría propia">
             <button class="cat-new__add" type="submit" id="cat-add" aria-label="Agregar categoría">+</button>
           </form>
@@ -75,13 +75,13 @@
     <section class="scene scene--wheel" id="scene-preparando" data-scene="preparando" hidden>
       <div class="wheel-head">
         <div class="top-row">
+          <button class="pausa-btn" type="button" aria-label="Pausar el reloj" hidden>
+            <span class="pausa-icon" aria-hidden="true"><span></span><span></span></span>
+          </button>
           <div class="cat-card">
             <span class="cat-card__label">Categoría</span>
             <strong class="cat-card__text" id="cat-wheel"></strong>
           </div>
-          <button class="pausa-btn" type="button" aria-label="Pausar el reloj" hidden>
-            <span class="pausa-icon" aria-hidden="true"><span></span><span></span></span>
-          </button>
         </div>
         <p class="kicker" id="kicker-wheel">Elegí una letra</p>
       </div>
@@ -104,13 +104,13 @@
     <!-- ══ 3. RONDA ACTIVA ══ -->
     <section class="scene scene--round" id="scene-activa" data-scene="activa" hidden>
       <div class="top-row">
+        <button class="pausa-btn" type="button" aria-label="Pausar el reloj" hidden>
+          <span class="pausa-icon" aria-hidden="true"><span></span><span></span></span>
+        </button>
         <div class="cat-card">
           <span class="cat-card__label">Categoría</span>
           <strong class="cat-card__text" id="cat-round"></strong>
         </div>
-        <button class="pausa-btn" type="button" aria-label="Pausar el reloj" hidden>
-          <span class="pausa-icon" aria-hidden="true"><span></span><span></span></span>
-        </button>
       </div>
       <div class="round-stage">
         <div class="dial" id="dial">
