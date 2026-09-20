@@ -274,10 +274,12 @@
     if (hold) el.wipe.classList.add('wipe--hold');
     else if (fast) el.wipe.classList.add('wipe--fast');
     el.wipe.classList.add('is-active');
-    // El cambio de escena va cuando la cortina tapa: 42% de la animación.
-    later(fn, hold ? 430 : (fast ? 180 : 280));
+    // El cambio de escena va cuando la cortina tapa. En la larga va al
+    // final del tapado, no al principio: detrás se rearma el reloj y no
+    // puede empezar a correr un segundo antes de que se vea la rueda.
+    later(fn, hold ? 2000 : (fast ? 180 : 280));
     later(() => el.wipe.classList.remove('is-active', 'wipe--hold', 'wipe--fast'),
-          hold ? 1180 : (fast ? 480 : 700));
+          hold ? 2480 : (fast ? 480 : 700));
   }
 
   /* ── La rueda ────────────────────────────────────────────────── */

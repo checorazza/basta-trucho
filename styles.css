@@ -529,19 +529,22 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
   text-shadow:0 6px 0 rgba(0,0,0,.45);
   opacity:0;
 }
-.wipe.is-active.wipe--hold{animation:wipeHold 1.1s var(--ease-snap) forwards;}
-.wipe.is-active.wipe--hold .wipe__word{animation:wordPop 1.1s var(--ease-snap) forwards;}
+.wipe.is-active.wipe--hold{animation:wipeHold 2.4s var(--ease-snap) forwards;}
+.wipe.is-active.wipe--hold .wipe__word{animation:wordPop 2.4s var(--ease-snap) forwards;}
+/* Sobre 2,4s: la cortina tapa a los 240ms, igual que en la versión corta.
+   Lo único estirado es la permanencia, no la entrada. */
 @keyframes wipeHold{
   0%{transform:translateY(101%);border-radius:44% 44% 0 0;}
-  22%{transform:translateY(0);border-radius:0;}
-  72%{transform:translateY(0);border-radius:0;}
+  10%{transform:translateY(0);border-radius:0;}
+  85%{transform:translateY(0);border-radius:0;}
   100%{transform:translateY(-101%);border-radius:0 0 44% 44%;}
 }
+/* Golpe a los 144ms, palabra entera a los 360ms, y ahí se queda hasta 1900ms. */
 @keyframes wordPop{
-  0%,14%{opacity:0;transform:scale(2.3) rotate(-8deg);}
-  32%{opacity:1;transform:scale(1) rotate(0);}
-  68%{opacity:1;transform:scale(1) rotate(0);}
-  84%,100%{opacity:0;transform:scale(.92);}
+  0%,6%{opacity:0;transform:scale(2.3) rotate(-8deg);}
+  15%{opacity:1;transform:scale(1) rotate(0);}
+  79%{opacity:1;transform:scale(1) rotate(0);}
+  87%,100%{opacity:0;transform:scale(.92);}
 }
 
 /* ── Horizontal / pantalla compartida ────────────────────────── */
