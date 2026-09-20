@@ -82,6 +82,7 @@
     lblDuracion: $('lbl-duracion'),
     modoNormal: $('modo-normal'), modoContra: $('modo-contra'), modoAyuda: $('modo-ayuda'),
     sonido: $('btn-sonido'), sonidoEstado: $('sonido-estado'),
+    compacto: $('btn-compacto'), compactoEstado: $('compacto-estado'),
     catSelect: $('cat-select'), catDel: $('cat-del'),
     catForm: $('cat-form'), catInput: $('cat-input'),
     catWheel: $('cat-wheel'), catRound: $('cat-round'),
@@ -108,6 +109,7 @@
     pauseAt: 0,
     bajo: false,         // el reloj acaba de bajar un escalón
     sound: true,
+    compact: false,     // la rueda saca las usadas en vez de atenuarlas
     category: '',
     myCats: [],
     letter: null,
@@ -215,6 +217,7 @@
       if (Number.isFinite(d) && d >= DUR_MIN && d <= DUR_MAX) state.duration = d;
       state.sound = localStorage.getItem('basta:sonido') !== '0';
       if (localStorage.getItem('basta:modo') === 'contra') state.mode = 'contra';
+      state.compact = localStorage.getItem('basta:compacto') === '1';
       const mias = JSON.parse(localStorage.getItem('basta:misCategorias') || '[]');
       if (Array.isArray(mias)) {
         state.myCats = mias.filter(c => typeof c === 'string' && c.trim())
@@ -229,6 +232,7 @@
       localStorage.setItem('basta:duracion', String(state.duration));
       localStorage.setItem('basta:sonido', state.sound ? '1' : '0');
       localStorage.setItem('basta:modo', state.mode);
+      localStorage.setItem('basta:compacto', state.compact ? '1' : '0');
       localStorage.setItem('basta:categoria', state.category);
       localStorage.setItem('basta:misCategorias', JSON.stringify(state.myCats));
     } catch (e) {}
@@ -249,6 +253,8 @@
     el.durMas.disabled = state.duration >= DUR_MAX;
     el.sonido.setAttribute('aria-pressed', String(state.sound));
     el.sonidoEstado.textContent = state.sound ? 'SÍ' : 'NO';
+    el.compacto.setAttribute('aria-pressed', String(state.compact));
+    el.compactoEstado.textContent = state.compact ? 'SÍ' : 'NO';
   }
 
   /* ── Categorías ──────────────────────────────────────────────── */
@@ -344,23 +350,52 @@
 
   /* ── La rueda ────────────────────────────────────────────────── */
   const tiles = new Map();
+
+  // En compacto la rueda muestra sólo las que quedan por jugar.
+  const letrasEnRueda = () =>
+    state.compact ? ALL.filter(L => !state.used.has(L)) : ALL;
+
+  /* Reparte las fichas visibles en el anillo y las agranda: el diámetro sale
+     de la tangencia entre vecinas para N fichas, dejando el mismo hueco del
+     27%. Con pocas letras el tamaño se topa, si no quedan gigantes. */
+  function layoutWheel() {
+    const visibles = letrasEnRueda();
+    const n = visibles.length;
+    if (!n) return;
+    const sen = n > 2 ? Math.sin(Math.PI / n) : 1;
+    const d = Math.min(0.19, sen / (1.27 + sen));
+    el.wheel.style.setProperty('--btn', 'calc(var(--wheel) * ' + d.toFixed(4) + ')');
+    el.wheel.style.setProperty('--rf', (0.5 - d / 2).toFixed(4));
+
+    /* El aro va justo adentro del borde interno de las fichas, y el botón
+       justo adentro del aro. Con 20 letras da los mismos valores de antes. */
+    const aro = (0.5 - d - 0.037) / 0.485;
+    const boton = 2 * (0.435 * aro - 0.037);
+    el.wheel.style.setProperty('--clock', aro.toFixed(4));
+    el.wheel.style.setProperty('--spin', boton.toFixed(4));
+
+    const paso = 360 / n;
+    const visto = new Set(visibles);
+    tiles.forEach((node, L) => { node.hidden = !visto.has(L); });
+    visibles.forEach((L, i) =>
+      tiles.get(L).style.setProperty('--a', (i * paso).toFixed(3)));
+  }
   function buildWheel() {
     const frag = document.createDocumentFragment();
-    const step = 360 / ALL.length;
-    ALL.forEach((L, i) => {
+    ALL.forEach((L) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'letter';
       b.textContent = L;
       b.dataset.letter = L;
       b.setAttribute('aria-label', 'Letra ' + L);
-      b.style.setProperty('--a', (i * step).toFixed(3));
       frag.appendChild(b);
       tiles.set(L, b);
     });
     el.wheelLetters.appendChild(frag);
   }
   function paintWheel() {
+    layoutWheel();
     tiles.forEach((node, L) => {
       node.classList.toggle('is-used', state.used.has(L));
       node.classList.remove('is-flash', 'is-picked', 'is-nope');
@@ -455,7 +490,9 @@
     if (state.phase !== 'preparando') return;
     lockWheel(true);
     congelarReloj();
-    const pool = ALL.filter(L => !state.used.has(L));
+    const orden = letrasEnRueda();          // en compacto no hay usadas que barrer
+    const pool = orden.filter(L => !state.used.has(L));
+    if (!pool.length) { lockWheel(false); descongelarReloj(); return; }
     const target = pool[Math.floor(Math.random() * pool.length)];
     if (reduced()) { tiles.get(target).classList.add('is-picked'); commitLetter(target);
       sfx.elegir(); later(() => beginRound(target), 300); return; }
@@ -463,12 +500,12 @@
     // La ruleta recorre el anillo frenando y aterriza justo en la letra sorteada.
     // Con el reloj congelado no cuesta ronda, así que da casi dos vueltas
     // y frena largo: 38 pasos sobre un anillo de 20.
-    const steps = 38;
-    const target_i = ALL.indexOf(target);
-    const from = ((target_i - (steps - 1)) % ALL.length + ALL.length) % ALL.length;
+    const steps = Math.min(38, Math.max(8, orden.length * 2));
+    const target_i = orden.indexOf(target);
+    const from = ((target_i - (steps - 1)) % orden.length + orden.length) % orden.length;
     let delay = 22, acc = 0, prev = null;
     for (let i = 0; i < steps; i++) {
-      const node = tiles.get(ALL[(from + i) % ALL.length]);
+      const node = tiles.get(orden[(from + i) % orden.length]);
       const last = prev;
       later(() => {
         if (last) last.classList.remove('is-flash');
@@ -751,6 +788,11 @@
       el.catInput.blur();                 // baja el teclado del celular
       sfx.elegir();
     }
+  });
+
+  el.compacto.addEventListener('click', () => {
+    state.compact = !state.compact;
+    savePrefs(); paintPrefs(); sfx.tick();
   });
 
   el.sonido.addEventListener('click', () => {

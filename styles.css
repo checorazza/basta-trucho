@@ -310,6 +310,10 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
      El hueco es zona muerta: un toque ahí no elige nada en vez de elegir mal. */
   --btn:calc(var(--wheel) * .1097);
   --rf:.44515;
+  /* El aro del reloj y el botón central se encogen cuando las fichas crecen,
+     si no las fichas se les montan encima. Los fija layoutWheel(). */
+  --clock:.7285;
+  --spin:.5598;
   position:relative; width:var(--wheel); height:var(--wheel); flex:none;
   animation:wheelIn .5s var(--ease-pop) both;
 }
@@ -324,13 +328,13 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
   box-shadow:inset 0 0 60px rgba(0,0,0,.5), var(--shadow);
 }
 .wheel__disc::after{
-  content:""; position:absolute; inset:calc(var(--wheel) * .135); border-radius:50%;
+  content:""; position:absolute; inset:calc(var(--btn) + var(--wheel) * .012); border-radius:50%;
   border:1px dashed var(--line);
 }
 /* Reloj de la rueda: anillo entre el botón central y las letras. */
 .wheel__clock{
   position:absolute; left:50%; top:50%;
-  width:calc(var(--wheel) * .728); height:calc(var(--wheel) * .728);
+  width:calc(var(--wheel) * var(--clock)); height:calc(var(--wheel) * var(--clock));
   transform:translate(-50%,-50%) rotate(-90deg);
   pointer-events:none;   /* tapa el botón AL AZAR: no debe robarle el toque */
 }
@@ -385,18 +389,18 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
 
 .spin{
   position:absolute; left:50%; top:50%;
-  width:calc(var(--wheel) * .56); height:calc(var(--wheel) * .56);
+  width:calc(var(--wheel) * var(--spin)); height:calc(var(--wheel) * var(--spin));
   transform:translate(-50%,-50%); border-radius:50%;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
   background:var(--rojo); color:var(--papel);
   box-shadow:0 7px 0 var(--rojo-deep), var(--shadow);
   transition:transform .1s var(--ease-snap), box-shadow .1s var(--ease-snap);
 }
-.spin__small{font-size:calc(var(--wheel) * .042);font-weight:900;letter-spacing:.2em;opacity:.85;}
-.spin__big{font-family:'Chango',Impact,sans-serif;font-size:calc(var(--wheel) * .115);line-height:1;}
+.spin__small{font-size:calc(var(--wheel) * var(--spin) * .075);font-weight:900;letter-spacing:.2em;opacity:.85;}
+.spin__big{font-family:'Chango',Impact,sans-serif;font-size:calc(var(--wheel) * var(--spin) * .205);line-height:1;}
 .spin__time{
-  margin-top:calc(var(--wheel) * .016);
-  font-weight:900; font-size:calc(var(--wheel) * .058); line-height:1;
+  margin-top:calc(var(--wheel) * var(--spin) * .029);
+  font-weight:900; font-size:calc(var(--wheel) * var(--spin) * .1036); line-height:1;
   font-variant-numeric:tabular-nums; color:var(--papel);
 }
 .spin__time small{font-size:.6em;opacity:.75;}
