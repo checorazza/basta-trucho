@@ -404,6 +404,9 @@
   }
   function paintWheel() {
     layoutWheel();
+    // El escalón de contrarreloj se canta con el latido del botón central.
+    el.azar.classList.remove('is-baja');
+    if (state.bajo) { void el.azar.offsetWidth; el.azar.classList.add('is-baja'); }
     tiles.forEach((node, L) => {
       node.classList.toggle('is-used', state.used.has(L));
       node.classList.remove('is-flash', 'is-picked', 'is-nope');

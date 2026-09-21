@@ -365,6 +365,17 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
     scale(var(--s));
   transition:background .12s, color .12s, box-shadow .12s, transform .12s var(--ease-pop);
 }
+/* Hover sólo con mouse: en touch el :hover queda pegado después del toque.
+   Crece con el rebote elástico que ya usan las fichas y se enmarca en rojo,
+   anticipando el rojo del toque sin robarle el estado :active. */
+@media (hover:hover) and (pointer:fine){
+  .letter:not(.is-used):not(:disabled):hover{
+    --s:1.14;
+    z-index:2;                 /* si no, la vecina de al lado la tapa al crecer */
+    box-shadow:0 5px 0 rgba(0,0,0,.55);
+  }
+  .letter.is-used:hover{cursor:not-allowed;}
+}
 .letter:active{background:var(--rojo);color:var(--papel);}
 .letter.is-used{background:var(--papel-16);color:var(--papel-dim);box-shadow:none;}
 /* Rebote de rechazo: se encoge y vuelve, con la transición que ya tiene. */
@@ -397,6 +408,21 @@ button:focus-visible{outline:3px solid var(--papel);outline-offset:4px;border-ra
   font-variant-numeric:tabular-nums; color:var(--papel);
 }
 .spin__time small{font-size:.6em;opacity:.75;}
+/* Contrarreloj: la primera ronda de cada escalón late el botón entero.
+   Parpadear sólo el número no servía: el botón es rojo y el número en rojo
+   desaparecía en vez de resaltar. */
+.spin.is-baja{animation:golpeBaja .5s ease-in-out 3;}
+.spin.is-baja .spin__big,
+.spin.is-baja .spin__small,
+.spin.is-baja .spin__time{animation:textoBaja .5s ease-in-out 3;}
+@keyframes golpeBaja{
+  0%,100%{transform:translate(-50%,-50%) scale(1);background:var(--rojo);}
+  50%{transform:translate(-50%,-50%) scale(1.07);background:var(--papel);}
+}
+@keyframes textoBaja{
+  0%,100%{color:var(--papel);}
+  50%{color:var(--rojo);}
+}
 .spin:active:not(:disabled){transform:translate(-50%,calc(-50% + 5px));box-shadow:0 2px 0 var(--rojo-deep);}
 .spin:disabled{cursor:default;}
 
